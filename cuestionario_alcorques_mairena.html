@@ -55,6 +55,12 @@ body{max-width:var(--max);margin:0 auto;padding:env(safe-area-inset-top,0px) 0 8
   :root:not([data-theme="light"]) .hero::after{background:repeating-linear-gradient(-45deg,transparent 0,transparent 14px,rgba(0,240,255,0.06) 14px,rgba(0,240,255,0.06) 15px);}
 }
 .hero-in{position:relative;z-index:1;max-width:560px;}
+
+/* Logo Manolit∞ decorativo en el hero */
+.hero-logo{position:absolute;z-index:0;top:50%;right:var(--space-4);transform:translateY(-50%);width:min(190px,30%);pointer-events:none;opacity:.95;filter:drop-shadow(0 6px 18px rgba(0,0,0,.25));}
+.hero-logo svg{width:100%;height:auto;display:block;}
+@media (max-width:640px){.hero-logo{display:none;}}
+@media (prefers-reduced-motion:reduce){.hero-logo{filter:none;}}
 .hero-org{font-family:var(--font-mono);font-size:var(--type-xs);font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:var(--space-2);}
 .hero h1{font-family:var(--font-serif);font-size:clamp(1.7rem,4.8vw,2.3rem);font-weight:600;line-height:1.2;letter-spacing:-.02em;max-width:520px;color:var(--paper);}
 [data-theme="dark"] .hero h1{color:var(--ink);}
@@ -212,6 +218,21 @@ footer.pie a{color:inherit;text-decoration:underline;}
       <span>635 alcorques vacíos</span>
       <span>6 preguntas</span>
       <span>Menos de 3 minutos</span>
+    </div>
+    <div class="hero-logo" aria-hidden="true">
+      <svg viewBox="0 0 200 320" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="hoja" x1="0" y1="290" x2="0" y2="30" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="var(--accent)"/>
+            <stop offset="1" stop-color="var(--breath-good)"/>
+          </linearGradient>
+        </defs>
+        <path d="M 100,30 C 30,110 30,210 100,290 C 170,210 170,110 100,30 Z" fill="none" stroke="url(#hoja)" stroke-width="6" stroke-linejoin="round"/>
+        <circle cx="100" cy="150" r="45" fill="none" stroke="var(--accent)" stroke-width="4"/>
+        <path d="M 100,146 C 75,121 75,171 100,146 C 125,121 125,171 100,146 Z" fill="var(--accent)"/>
+        <path d="M 60,165 Q 80,155 100,165 T 140,165" fill="none" stroke="var(--breath-good)" stroke-width="4" stroke-linecap="round"/>
+        <path d="M 65,175 Q 82.5,167 100,175 T 135,175" fill="none" stroke="var(--breath-good)" stroke-width="3" stroke-linecap="round"/>
+      </svg>
     </div>
   </div>
 </header>
