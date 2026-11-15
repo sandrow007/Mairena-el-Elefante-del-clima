@@ -24,6 +24,19 @@ node_modules/
 # Logos y assets temporales extraidos de los visores
 _logo*.svg
 
+# Fotos y previews de trabajo (mairena-3d-manolit-cuadrado.png NO se ignora: es la imagen og:image/twitter:image del mapa)
+mairena-3d-manolit.png
+fix-meta.ps1
+fix-icon.ps1
+fix-icon2.ps1
+metas.txt
+
+# Scripts y salidas temporales varias
+*.ps1
+out/
+out.*
+*.tmp
+
 # Informe personal (no forma parte del repositorio)
 informe_arbolado_mairena.html
 
