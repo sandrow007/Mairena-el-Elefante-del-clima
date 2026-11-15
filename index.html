@@ -37,7 +37,7 @@ select{font:12px system-ui,sans-serif;border:1px solid var(--line);border-radius
 #hud.min .cuerpo{display:none}
 [hidden]{display:none!important}
 </style>
-<script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/","three-mesh-bvh":"./vendor/three-mesh-bvh.module.js"}}</script>
+<script type="importmap">{"imports":{"three":"./mairena-3d/vendor/three.module.js","three/addons/":"./mairena-3d/vendor/","three-mesh-bvh":"./mairena-3d/vendor/three-mesh-bvh.module.js"}}</script>
 <base target="_blank">
 </head>
 <body>
@@ -147,7 +147,7 @@ try{
  controles.mouseButtons={LEFT:THREE.MOUSE.ROTATE,MIDDLE:THREE.MOUSE.DOLLY,RIGHT:THREE.MOUSE.PAN};
  controles.touches={ONE:THREE.TOUCH.ROTATE,TWO:THREE.TOUCH.DOLLY_PAN};
 
- const draco=new DRACOLoader().setDecoderPath('./vendor/draco/');
+ const draco=new DRACOLoader().setDecoderPath('./mairena-3d/vendor/draco/');
  const cargador=new GLTFLoader().setDRACOLoader(draco);
  const raiz=new THREE.Group();escena.add(raiz);
  window.__raiz=raiz;window.__THREE__=THREE;window.__camara=camara;window.__volar=v=>{};
@@ -315,7 +315,7 @@ try{
  });
 
  // ---- carga del modelo ----
- cargador.load('./Mairena_Elefante_Real.glb',g=>{
+ cargador.load('./mairena-3d/Mairena_Elefante_Real.glb',g=>{
   raiz.add(g.scene);
   let cajaCiudad=null; // encuadre por el casco urbano (inventario): calles y fincas rurales no descentran la vista
   g.scene.traverse(o=>{
@@ -394,7 +394,7 @@ try{
  document.getElementById('etiquetas').addEventListener('change',async e=>{
   try{
    if(e.target.checked){
-    if(!etiquetasObj&&!cargandoEtq){cargandoEtq=true;etiquetasObj=(await cargador.loadAsync('./Mairena_Etiquetas.glb')).scene}
+    if(!etiquetasObj&&!cargandoEtq){cargandoEtq=true;etiquetasObj=(await cargador.loadAsync('./mairena-3d/Mairena_Etiquetas.glb')).scene}
     if(etiquetasObj&&!etiquetasObj.parent)raiz.add(etiquetasObj);
    }else if(etiquetasObj)raiz.remove(etiquetasObj);
    necesitaRender=true;
