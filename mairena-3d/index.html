@@ -276,10 +276,13 @@ try{
     const geo=new THREE.ShapeGeometry(shape);
     const pos=geo.attributes.position,uv=geo.attributes.uv;
     for(let i=0;i<pos.count;i++){
-     uv.setXY(i,(pos.getX(i)-ORTO.xmin)/(ORTO.xmax-ORTO.xmin),(pos.getY(i)+5.102)/(5.276+5.102));
+     uv.setXY(i,(pos.getX(i)-ORTO.xmin)/(ORTO.xmax-ORTO.xmin),(pos.getY(i)-ORTO.zmin)/(ORTO.zmax-ORTO.zmin));
     }
-    geo.rotateX(-Math.PI/2);
-    ortoMesh=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({map:t,side:THREE.DoubleSide}));
+    // rotacion +90: el modelo usa z=+y_geografico (norte = +z). Con -90 la foto quedaba reflejada y desencuadrada
+    geo.rotateX(Math.PI/2);
+    t.colorSpace=THREE.SRGBColorSpace;
+    t.anisotropy=renderer.capabilities.getMaxAnisotropy();
+    ortoMesh=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({map:t,side:THREE.DoubleSide,toneMapped:false}));
     ortoMesh.position.y=-.004;
     escena.add(ortoMesh);
     ortoCargando=false;
@@ -391,7 +394,11 @@ try{
  document.getElementById('etiquetas').addEventListener('change',async e=>{
   try{
    if(e.target.checked){
-    if(!etiquetasObj&&!cargandoEtq){cargandoEtq=true;etiquetasObj=(await cargador.loadAsync('./Mairena_Etiquetas.glb')).scene}
+    if(!etiquetasObj&&!cargandoEtq){cargandoEtq=true;etiquetasObj=(await cargador.loadAsync('./Mairena_Etiquetas.glb')).scene;
+     // las etiquetas deben verse SIEMPRE por encima del modelo: sin depth test y con renderOrder alto
+     etiquetasObj.traverse(o=>{if(o.isMesh){o.renderOrder=1000;o.userData.etiqueta=true;
+      const ms=Array.isArray(o.material)?o.material:[o.material];
+      ms.forEach(m=>{m.depthTest=false;m.depthWrite=false;m.transparent=true;m.needsUpdate=true});}});}
     if(etiquetasObj&&!etiquetasObj.parent)raiz.add(etiquetasObj);
    }else if(etiquetasObj)raiz.remove(etiquetasObj);
    necesitaRender=true;
@@ -415,7 +422,7 @@ try{
   raton.set(((ev.clientX-r.left)/r.width)*2-1,-((ev.clientY-r.top)/r.height)*2+1);
   rayo.setFromCamera(raton,camara);
   const hits=rayo.intersectObjects(raiz.children,true);
-  for(const h of hits){if(h.object.visible&&h.object.isMesh&&h.distance>1e-4)return h}
+  for(const h of hits){if(h.object.visible&&h.object.isMesh&&!h.object.userData.etiqueta&&h.distance>1e-4)return h}
   return null;
  }
  let ultRayo=0;
