@@ -71,7 +71,6 @@ select{font:12px system-ui,sans-serif;border:1px solid var(--line);border-radius
     <label class="chk"><input type="checkbox" data-capa="arboles" checked> Árboles</label>
     <label class="chk"><input type="checkbox" data-capa="alcorques" checked> Alcorques</label>
     <label class="chk"><input type="checkbox" id="barrios-chk" checked> Barrios</label>
-    <label class="chk"><input type="checkbox" id="etiquetas"> Nombres (GLB)</label>
     <label class="chk"><input type="checkbox" id="terreno"> Terreno y base</label>
   </div>
   <div id="barra"><i></i></div>
@@ -399,22 +398,6 @@ try{
  function setPlegado(m){hud.classList.toggle('min',m);btnPlegar.textContent=m?'+':'–'}
  btnPlegar.addEventListener('click',()=>setPlegado(!hud.classList.contains('min')));
  if(innerWidth<520)setPlegado(true);
-
- // ---- etiquetas GLB ----
- let etiquetasObj=null,cargandoEtq=false;
- document.getElementById('etiquetas').addEventListener('change',async e=>{
-  try{
-   if(e.target.checked){
-    if(!etiquetasObj&&!cargandoEtq){cargandoEtq=true;etiquetasObj=(await cargador.loadAsync('./Mairena_Etiquetas.glb')).scene;
-     // las etiquetas deben verse SIEMPRE por encima del modelo: sin depth test y con renderOrder alto
-     etiquetasObj.traverse(o=>{if(o.isMesh){o.renderOrder=1000;o.userData.etiqueta=true;
-      const ms=Array.isArray(o.material)?o.material:[o.material];
-      ms.forEach(m=>{m.depthTest=false;m.depthWrite=false;m.transparent=true;m.needsUpdate=true});}});}
-    if(etiquetasObj&&!etiquetasObj.parent)raiz.add(etiquetasObj);
-   }else if(etiquetasObj)raiz.remove(etiquetasObj);
-   necesitaRender=true;
-  }catch(err){estado.textContent='No se pudieron cargar las etiquetas';console.error(err)}
- });
 
  // ---- terreno/base ----
  document.getElementById('terreno').addEventListener('change',e=>{
