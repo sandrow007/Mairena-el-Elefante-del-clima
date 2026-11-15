@@ -1557,6 +1557,9 @@ function updateClip(){
   var pane=map.getPane('tiles');pane.style.clipPath=clip;pane.style.webkitClipPath=clip;
 
   var roads=map.getPane('roads');roads.style.clipPath=clip;roads.style.webkitClipPath=clip;
+
+  var dataP=map.getPane('data');dataP.style.clipPath=clip;dataP.style.webkitClipPath=clip;
+  var parq=map.getPane('parques');parq.style.clipPath=clip;parq.style.webkitClipPath=clip;
 }
 map.on('move zoom viewreset resize moveend zoomend',updateClip);map.whenReady(updateClip);setTimeout(updateClip,100);
 window.__clip=updateClip;
