@@ -35,6 +35,11 @@ select{font:12px system-ui,sans-serif;border:1px solid var(--line);border-radius
 #fallo{position:fixed;inset:0;display:grid;place-items:center;background:var(--paper);padding:24px;text-align:center;color:var(--muted)}
 #plegar{float:right;margin:0 0 4px 8px;font-size:13px;padding:4px 9px}
 #hud.min .cuerpo{display:none}
+.legal-bar{position:fixed;bottom:calc(46px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);z-index:2;display:flex;flex-wrap:wrap;justify-content:center;gap:2px 12px;align-items:center;font-size:10px;color:var(--muted);background:rgba(255,255,255,.8);border:1px solid var(--line);border-radius:999px;padding:4px 12px;max-width:calc(100vw - 24px)}
+.legal-bar a{color:var(--muted);text-decoration:underline;text-underline-offset:2px;min-height:28px;display:inline-flex;align-items:center}
+.legal-bar a:hover{color:var(--ink)}
+.legal-bar a:active{opacity:.7}
+@media(max-width:700px){.legal-bar{gap:2px 8px;font-size:9px;padding:3px 10px}}
 [hidden]{display:none!important}
 </style>
 <script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/","three-mesh-bvh":"./vendor/three-mesh-bvh.module.js"}}</script>
@@ -75,6 +80,12 @@ select{font:12px system-ui,sans-serif;border:1px solid var(--line);border-radius
 </section>
 <div id="fps" hidden></div>
 <div id="tip"></div>
+<nav class="legal-bar" aria-label="Informacion legal">
+  <a href="https://manolitoaire.com/aviso-legal" target="_blank" rel="noopener">Aviso legal</a>
+  <a href="https://manolitoaire.com/cookies" target="_blank" rel="noopener">Cookies</a>
+  <a href="https://manolitoaire.com/about" target="_blank" rel="noopener">Quienes somos</a>
+  <a href="https://manolitoaire.com" target="_blank" rel="noopener">Rutas de sombra</a>
+</nav>
 <div id="ayuda">Arrastra: girar · Rueda: zoom al cursor · Clic derecho: desplazar · Clic en edificio: acercar · Flechas/WASD: paneo</div>
 <div id="atrib">Ortofoto PNOA © IGN España</div>
 <div id="fallo" hidden><div><strong>No se pudo iniciar WebGL.</strong><br>Prueba en un navegador moderno o abre el GLB en Blender.</div></div>
