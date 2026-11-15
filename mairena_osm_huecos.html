@@ -1421,32 +1421,16 @@ svg.leaflet-image-layer.leaflet-interactive path {
 @media(max-width:820px){
   .panel[open]{max-height:calc(100dvh - 170px);overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
   .btn-cuest-float{
-    right:calc(10px + env(safe-area-inset-right));bottom:calc(10px + env(safe-area-inset-bottom));font-size:12px;padding:8px 14px;min-height:36px;font-weight:700;box-shadow:var(--ui-shadow)
+    right:calc(10px + env(safe-area-inset-right));bottom:calc(10px + env(safe-area-inset-bottom));font-size:12px;padding:7px 14px;min-height:34px;font-weight:800;letter-spacing:.03em;box-shadow:none
   }
 /* Refinado movil: paleta del logo Manolit (cian/azul/violeta/rosa), estilo iPhone */
 @media(max-width:820px){
   .panel,.legend{
-    background:rgba(255,255,255,.74);
-    backdrop-filter:blur(20px) saturate(1.5);
-    -webkit-backdrop-filter:blur(20px) saturate(1.5);
-    border:1px solid rgba(102,126,234,.26);
-    box-shadow:0 12px 32px rgba(20,30,80,.16);
+    background:rgba(10,14,26,.74)!important;
+    border:1.5px solid rgba(167,139,250,.32)!important;
     border-radius:22px!important;
   }
-  :root[data-theme=dark] .panel,:root[data-theme=dark] .legend{
-    background:rgba(10,14,26,.74);
-    border-color:rgba(167,139,250,.32);
-    box-shadow:0 12px 32px rgba(0,0,0,.5);
-  }
-  .panel summary,.legend summary{
-    background:transparent;
-    border-radius:14px;
-    padding:7px 14px!important;
-    font-size:12px;
-    font-weight:800;
-    letter-spacing:.03em;
-    min-height:34px;
-  }
+  .panel summary,.legend summary{border-radius:14px}
   /* plegados: pequenos pero bien visibles */
   .panel:not([open]),.legend:not([open]){
     padding:0!important;
@@ -1454,10 +1438,11 @@ svg.leaflet-image-layer.leaflet-interactive path {
     max-width:82vw;
   }
   .panel:not([open]) summary,.legend:not([open]) summary{
-    padding:8px 14px!important;
+    padding:7px 14px!important;
     font-size:12px;
-    font-weight:700;
-    min-height:36px;
+    font-weight:800;
+    letter-spacing:.03em;
+    min-height:34px;
     border-radius:999px;
   }
   .legend .rows{font-size:12px;padding:4px 10px}
