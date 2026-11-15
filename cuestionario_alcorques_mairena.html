@@ -42,7 +42,7 @@
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html{background:var(--paper);color:var(--ink);font-family:var(--font-sans);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;transition:background .25s ease,color .25s ease;}
-body{max-width:var(--max);margin:0 auto;padding:env(safe-area-inset-top,0px) 0 80px;}
+body{max-width:var(--max);margin:0 auto;padding:env(safe-area-inset-top,0px) 0 110px;}
 
 .hero{background:var(--sky-deep);color:var(--paper);padding:var(--space-6) var(--space-4) var(--space-5);position:relative;overflow:hidden;}
 [data-theme="dark"] .hero{background:var(--mist);color:var(--ink);border-bottom:1px solid var(--line);}
@@ -172,6 +172,33 @@ footer.pie a{color:inherit;text-decoration:underline;}
 @media (prefers-reduced-motion:reduce){
   *,.prog-fill,.tree-card,.tree-mark,.btn,.tree-photo img{transition:none!important;}
 }
+/* ---- Barra de navegacion de retorno + aviso legal (estilo pagina principal) ---- */
+.backbar{display:flex;flex-wrap:wrap;gap:var(--space-1) var(--space-2);margin-bottom:var(--space-3);}
+.backbtn{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:10px 16px;border-radius:var(--r-pill);
+  background:var(--paper);color:var(--ink);font-size:var(--type-sm);font-weight:700;text-decoration:none;
+  border:1px solid var(--line);box-shadow:var(--shadow-card);transition:transform .15s ease,box-shadow .15s ease;}
+.backbtn:hover{transform:translateY(-1px);box-shadow:0 2px 4px rgba(13,31,38,.1),0 8px 24px rgba(13,31,38,.1);}
+.backbtn:active{transform:scale(.98);}
+.backbtn svg{flex-shrink:0;}
+.backbtn.sombra{background:var(--accent-soft);color:var(--accent-text);border-color:transparent;}
+[data-theme="dark"] .backbtn,[data-theme="dark"] .backbtn.sombra{background:var(--accent-soft);color:var(--accent-text);border-color:transparent;}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .backbtn{background:var(--accent-soft);color:var(--accent-text);border-color:transparent;}
+}
+@media (max-width:480px){
+  .backbtn{flex:1 1 calc(50% - var(--space-1));justify-content:center;padding:10px 10px;font-size:var(--type-xs);}
+}
+.legal-bar{position:fixed;z-index:50;left:50%;bottom:0;transform:translateX(-50%);
+  display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 14px;
+  width:100%;max-width:var(--max);padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));
+  background:var(--surface);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-top:1px solid var(--line);font-size:var(--type-xs);}
+.legal-bar a{color:var(--ink);text-decoration:underline;text-underline-offset:2px;min-height:32px;display:inline-flex;align-items:center;}
+.legal-bar a:visited{color:var(--ink);}
+.legal-bar a:active{opacity:.7;}
+@media (max-width:480px){
+  .legal-bar{gap:4px 10px;font-size:.7rem;}
+}
 </style>
 <base target="_blank">
 </head>
@@ -179,6 +206,16 @@ footer.pie a{color:inherit;text-decoration:underline;}
 
 <header class="hero">
   <div class="hero-in">
+    <nav class="backbar" aria-label="Navegacion">
+      <a class="backbtn" href="./mairena_osm_huecos.html" target="_self" rel="noopener" title="Volver al mapa de huecos de Mairena">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Volver al mapa
+      </a>
+      <a class="backbtn sombra" href="https://manolitoaire.com" rel="noopener" title="Rutas de sombra de Manolit∞ Aire">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+        Rutas de sombra
+      </a>
+    </nav>
     <p class="hero-org">Proyecto Manolit∞ — Mairena del Aljarafe</p>
     <h1>¿Qué árbol debería crecer en tu alcorque?</h1>
     <p class="hero-sub">En Mairena hay 635 alcorques vacíos. Dinos qué especie te gustaría ver plantada. Los resultados se presentarán al Ayuntamiento como propuesta ciudadana.</p>
@@ -607,5 +644,11 @@ function finish(){
 }
 updateUI();
 </script>
+<nav class="legal-bar" aria-label="Informacion legal">
+  <a href="https://manolitoaire.com/aviso-legal" rel="noopener">Aviso legal</a>
+  <a href="https://manolitoaire.com/cookies" rel="noopener">Cookies</a>
+  <a href="https://manolitoaire.com/about" rel="noopener">Quienes somos</a>
+  <a href="https://manolitoaire.com" rel="noopener">Rutas de sombra</a>
+</nav>
 </body>
 </html>
