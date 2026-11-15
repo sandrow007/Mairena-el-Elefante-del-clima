@@ -304,11 +304,21 @@ try{
   return new Promise(res=>{
    new THREE.TextureLoader().setCrossOrigin('anonymous').load(ORTO.url,t=>{
     // ortofoto recortada EXACTAMENTE al perímetro municipal: nada de entorno
-    const shape=new THREE.Shape(FRONTERA.map(p=>new THREE.Vector2(p[0],p[1])));
+    // calibración automática: el polígono se escala a la caja real del modelo cargado
+    const fx=FRONTERA.map(p=>p[0]),fy=FRONTERA.map(p=>p[1]);
+    const fxmin=Math.min.apply(null,fx),fxmax=Math.max.apply(null,fx);
+    const fymin=Math.min.apply(null,fy),fymax=Math.max.apply(null,fy);
+    const bx0=caja?caja.min.x:fxmin,bx1=caja?caja.max.x:fxmax;
+    // tras geo.rotateX(-PI/2) el mundo z = -y de la forma; el norte (z mín) es y máx
+    const by0=caja?-caja.max.z:fymin,by1=caja?-caja.min.z:fymax;
+    const pts=FRONTERA.map(p=>new THREE.Vector2(
+      bx0+(p[0]-fxmin)/(fxmax-fxmin)*(bx1-bx0),
+      by0+(p[1]-fymin)/(fymax-fymin)*(by1-by0)));
+    const shape=new THREE.Shape(pts);
     const geo=new THREE.ShapeGeometry(shape);
     const pos=geo.attributes.position,uv=geo.attributes.uv;
     for(let i=0;i<pos.count;i++){
-     uv.setXY(i,(pos.getX(i)-ORTO.xmin)/(ORTO.xmax-ORTO.xmin),(pos.getY(i)-ORTO.zmin)/(ORTO.zmax-ORTO.zmin));
+     uv.setXY(i,(pos.getX(i)-bx0)/(bx1-bx0),(pos.getY(i)-by0)/(by1-by0));
     }
     geo.rotateX(-Math.PI/2);
     t.colorSpace=THREE.SRGBColorSpace;
