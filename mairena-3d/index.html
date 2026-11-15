@@ -288,7 +288,7 @@ try{
   grupoBarrios=new THREE.Group();
   for(const b of BARRIOS){
    const sp=hacerSprite(b[0]);
-   sp.position.set(b[1],.14,b[2]);
+   sp.position.set(b[1],.14,-b[2]);
    grupoBarrios.add(sp);
   }
   escena.add(grupoBarrios);
@@ -308,8 +308,7 @@ try{
     for(let i=0;i<pos.count;i++){
      uv.setXY(i,(pos.getX(i)-ORTO.xmin)/(ORTO.xmax-ORTO.xmin),(pos.getY(i)-ORTO.zmin)/(ORTO.zmax-ORTO.zmin));
     }
-    // rotacion +90: el modelo usa z=+y_geografico (norte = +z). Con -90 la foto quedaba reflejada y desencuadrada
-    geo.rotateX(Math.PI/2);
+    geo.rotateX(-Math.PI/2);
     t.colorSpace=THREE.SRGBColorSpace;
     t.anisotropy=renderer.capabilities.getMaxAnisotropy();
     ortoMesh=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({map:t,side:THREE.DoubleSide,toneMapped:false}));
@@ -387,9 +386,9 @@ try{
   if(!q)return;
   const l=LUGARES.find(l=>l.n===q)||LUGARES.find(l=>l.n.toLowerCase().includes(q.toLowerCase()));
   if(!l){estado.textContent=window.__t3d('notFound')+q;return}
-  const t=new THREE.Vector3(l.x,.05,l.z);
+  const t=new THREE.Vector3(l.x,.05,-l.z);
   const d=2.6;
-  const p=new THREE.Vector3(l.x+d*.55,d*.75,l.z+d*.5);
+  const p=new THREE.Vector3(l.x+d*.55,d*.75,-l.z+d*.5);
   volar(p,t,1.1);
  }
  document.getElementById('ir').addEventListener('click',irAlLugar);
