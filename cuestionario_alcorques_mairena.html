@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
-<title>Cuestionario ciudadano — Alcorques de Mairena del Aljarafe</title>
+<title data-qtitle="title">Cuestionario ciudadano — Alcorques de Mairena del Aljarafe</title>
 <style>
 :root{
   --sky-deep:#0E3B47; --sky-mid:#17788A; --mist:#E4F1EB; --paper:#F6FAF7;
@@ -201,23 +201,24 @@ footer.pie a{color:inherit;text-decoration:underline;}
 
 <header class="hero">
   <div class="hero-in">
-    <nav class="backbar" aria-label="Navegacion">
-      <a class="backbtn" href="./mairena_osm_huecos.html" target="_self" rel="noopener" title="Volver al mapa de huecos de Mairena">
+    <nav class="backbar" aria-label="Navegacion" data-qaria="navigation">
+      <button class="backbtn" id="lang-form" type="button" aria-label="Cambiar idioma / Change language">EN</button>
+      <a class="backbtn" href="./mairena_osm_huecos.html" target="_self" rel="noopener" title="Volver al mapa de huecos de Mairena" data-qtitle="backTitle">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-        Volver al mapa
+        <span data-q="backMap">Volver al mapa</span>
       </a>
-      <a class="backbtn sombra" href="https://manolitoaire.com" rel="noopener" title="Rutas de sombra de Manolit∞ Aire">
+      <a class="backbtn sombra" href="https://manolitoaire.com" rel="noopener" title="Rutas de sombra de Manolit∞ Aire" data-qtitle="shadeTitle">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
-        Rutas de sombra
+        <span data-q="shadeRoutes">Rutas de sombra</span>
       </a>
     </nav>
-    <p class="hero-org">Proyecto Manolit∞ — Mairena del Aljarafe</p>
-    <h1>¿Qué árbol debería crecer en tu alcorque?</h1>
-    <p class="hero-sub">En Mairena hay 635 alcorques vacíos. Dinos qué especie te gustaría ver plantada. Los resultados se presentarán al Ayuntamiento como propuesta ciudadana.</p>
+    <p class="hero-org" data-q="heroOrg">Proyecto Manolit∞ — Mairena del Aljarafe</p>
+    <h1 data-q="heroTitle">¿Qué árbol debería crecer en tu alcorque?</h1>
+    <p class="hero-sub" data-q="heroSub">En Mairena hay 635 alcorques vacíos. Dinos qué especie te gustaría ver plantada. Los resultados se presentarán al Ayuntamiento como propuesta ciudadana.</p>
     <div class="hero-data">
-      <span>635 alcorques vacíos</span>
-      <span>6 preguntas</span>
-      <span>Menos de 3 minutos</span>
+      <span data-q="dataPits">635 alcorques vacíos</span>
+      <span data-q="dataQuestions">6 preguntas</span>
+      <span data-q="dataTime">Menos de 3 minutos</span>
     </div>
     <div class="hero-logo" aria-hidden="true">
       <svg viewBox="0 0 200 320" xmlns="http://www.w3.org/2000/svg">
@@ -512,10 +513,37 @@ footer.pie a{color:inherit;text-decoration:underline;}
   </a>
 </div>
 
-<footer class="pie" id="foot">
+<footer class="pie" id="foot" data-q="footer">
   Iniciativa Manolit∞ — datos abiertos OpenStreetMap, Catastro e inventario municipal de Mairena del Aljarafe. Las respuestas se recopilan de forma anónima y agregada.
 </footer>
 
+<script>
+(function(){
+const EN={
+ heroOrg:'Manolit∞ Project — Mairena del Aljarafe',heroTitle:'Which tree should grow in your tree pit?',heroSub:'There are 635 empty tree pits in Mairena. Tell us which species you would like to see planted. The results will be presented to the Town Council as a community proposal.',dataPits:'635 empty tree pits',dataQuestions:'6 questions',dataTime:'Less than 3 minutes',backMap:'Back to map',shadeRoutes:'Shade routes',footer:'Manolit∞ initiative — open data from OpenStreetMap, the Cadastre and Mairena del Aljarafe municipal inventory. Responses are collected anonymously and in aggregate.',
+ title:'Community survey — Mairena del Aljarafe tree pits',navigation:'Navigation',backTitle:'Back to the Mairena gap map',shadeTitle:'Manolit∞ Aire shade routes',optional:'(optional)',
+ stepTitles:['Do you live in Mairena del Aljarafe?','What is the street or place around the tree pit like?','What matters most to you in a street tree?','Which tree would be your favourite for that tree pit?','Have you seen an empty tree pit missing from the map?','What do you think of the Manolit∞ Mairena mapping project?'],
+ stepDescs:['This helps us understand whether the initiative is reaching people who live in the municipality or spreading further.','The type of space determines which species are suitable: size, roots and watering needs.','This helps us present the Town Council with the reasons residents value most when suggesting species.','Choose up to <strong>2 options</strong>. The cards describe each species and why it suits Mairena.','The project map already shows 635 detected tree pits, but some may be missing. If you know of one, tell us here.','The project uses open data from OpenStreetMap, the Cadastre and the municipal inventory to highlight the town’s trees and green heritage. We would like to hear your opinion.'],
+ answers:['Yes, I live in Mairena','No, but I am interested in the project','<strong>Narrow pavement or pedestrian street</strong>Limited soil, with frequent pedestrian traffic.','<strong>Wide pavement or residential street</strong>Enough space, with access to homes.','<strong>Avenue, park or square</strong>Ample open space with more room for roots.','<strong>Summer shade</strong>To cool the street during the hottest months.','<strong>Native or Mediterranean species</strong>To suit the local ecosystem and need little water.','<strong>Flowers or colour</strong>To brighten the street with flowers or fruit at some time of year.','<strong>Biodiversity: birds and insects</strong>To attract local wildlife and support the urban ecosystem.','<strong>Low maintenance</strong>To need few council resources: water, pruning and cleaning.','Very interesting, I didn’t know it existed','Interesting, I already knew about it','I feel neutral about it','I would like to contribute or help in some way'],
+ trees:['Hackberry','Wild olive','Judas tree','Carob tree','Holm oak','Pomegranate'],
+ treeDescs:['A broad, dense crown provides excellent summer shade. Grows in poor, dry soils and can live for over 600 years. Its fruit feeds birds.','A native wild olive, extremely drought-resistant. Elegant evergreen shape and a hallmark of the Aljarafe Mediterranean landscape.','Blooms bright pink in spring before its leaves appear. Highly ornamental and compact, ideal for pavements. Tolerates summer drought well.','An evergreen tree with a dense crown. Needs no irrigation once established. Its pods feed wildlife and livestock; emblematic of the Andalusian Mediterranean landscape.','Andalusia’s most emblematic tree, with a dense evergreen crown and generous shade. Shelter and food for many species; slow-growing but long-lived.','Compact and ideal for narrow pavements. Showy red flowers in summer and fruit in autumn. Well adapted to Andalusia’s semi-arid climate and highly drought-resistant.'],
+ tags:['Shade','Drought-tolerant','Already in Mairena','Native','Drought-tolerant','Already in Mairena','Flowers','Drought-tolerant','Already in Mairena','Shade','Native','No irrigation','Shade','Native','No irrigation','Flowers','Drought-tolerant','Mediterranean'],
+ info:['<strong>Species are selected for your area.</strong> All tolerate Aljarafe drought and are documented in Andalusian municipal inventories. Those already found in Mairena are marked.','<strong>The project map</strong> is available at <a href="https://github.com/sandrow007/Sititos-faltantes-por-dibujar-en-OSM" target="_blank" rel="noopener">github.com/sandrow007</a>. If you see an unmarked empty tree pit, tell us here so it can be added to the inventory.'],
+ fields:['Approximate street or location','Additional comments','Suggestion for the project'],placeholders:['E.g. Sevilla Street, Palomares area, opposite the park…','Other empty tree pits, inventory issues, suggestions…','Something you would add, improve or like to see…'],
+ choose:'Choose an option to continue.',selectTree:'Select at least one tree.',back:'Back',next:'Next',send:'Submit my vote',thanks:'Thank you for participating',thanksText:'Your vote joins those of other residents. The results will be presented to Mairena del Aljarafe Town Council as a community proposal for new plantings.',thanksMore:'To follow the project, visit the repository on GitHub.',summary:'Your response summary',viewProject:'View the project on GitHub',summaryLabels:['Mairena resident','Area type','Priority','Tree(s) voted for','Unmapped tree pit','Project opinion'],notSpecified:'(not specified)',completed:'Completed'
+};
+let lang='es';try{const s=localStorage.getItem('mairena-lang');if(s==='es'||s==='en')lang=s;else if(navigator.language&&/^en/i.test(navigator.language))lang='en'}catch(e){}
+window.__qEnglish=EN;
+const tr=k=>lang==='en'?EN[k]:null;
+function put(selector,arr){document.querySelectorAll(selector).forEach((e,i)=>{if(arr&&arr[i]!==undefined)e.innerHTML=arr[i]})}
+function apply(){if(lang!=='en')return;document.documentElement.lang='en';document.title=EN.title;document.querySelectorAll('.rl strong').forEach(e=>{if(!e.dataset.es)e.dataset.es=e.textContent});document.querySelectorAll('.tree-card').forEach(e=>{if(!e.dataset.esName)e.dataset.esName=e.dataset.name});document.querySelectorAll('.tree-name').forEach(e=>{if(!e.dataset.es)e.dataset.es=e.textContent});document.querySelectorAll('.tree-desc').forEach(e=>{if(!e.dataset.es)e.dataset.es=e.textContent});document.querySelector('[data-q="heroOrg"]').textContent=EN.heroOrg;document.querySelector('[data-q="heroTitle"]').textContent=EN.heroTitle;document.querySelector('[data-q="heroSub"]').textContent=EN.heroSub;document.querySelector('[data-q="dataPits"]').textContent=EN.dataPits;document.querySelector('[data-q="dataQuestions"]').textContent=EN.dataQuestions;document.querySelector('[data-q="dataTime"]').textContent=EN.dataTime;document.querySelector('[data-q="backMap"]').textContent=EN.backMap;document.querySelector('[data-q="shadeRoutes"]').textContent=EN.shadeRoutes;document.querySelector('[data-q="footer"]').textContent=EN.footer;document.querySelector('[data-qaria="navigation"]').setAttribute('aria-label',EN.navigation);document.querySelector('[data-qtitle="backTitle"]').title=EN.backTitle;document.querySelector('[data-qtitle="shadeTitle"]').title=EN.shadeTitle;
+put('.step-title',EN.stepTitles);put('.step-desc',EN.stepDescs);put('.rl',EN.answers);put('.tree-name',EN.trees);put('.tree-desc',EN.treeDescs);put('.tree-tag',EN.tags);put('.infobox',EN.info);
+document.querySelectorAll('.fl').forEach((e,i)=>{e.firstChild.textContent=EN.fields[i]+' ';e.querySelector('span').textContent=EN.optional});['i-calle','i-comment','i-proyecto'].forEach((id,i)=>document.getElementById(id).placeholder=EN.placeholders[i]);document.querySelectorAll('[id^="v-s"]').forEach(e=>e.textContent=e.id==='v-s4'?EN.selectTree:EN.choose);document.querySelector('#thanks h2').textContent=EN.thanks;document.querySelector('#thanks>p:nth-of-type(2)').textContent=EN.thanksText;document.querySelector('#thanks>p:nth-of-type(3)').textContent=EN.thanksMore;document.querySelector('#resbox h3').textContent=EN.summary;document.querySelector('#thanks>a').textContent=EN.viewProject;document.getElementById('btnPrev').textContent=EN.back;document.getElementById('btnNext').textContent=EN.next;document.getElementById('lang-form').textContent='ES';document.getElementById('lang-form').setAttribute('aria-label','Change language / Cambiar idioma');window.__qEnglish=EN;window.__qLang='en';if(window.__qUpdateUI)window.__qUpdateUI()}
+function setLanguage(l){lang=l;try{localStorage.setItem('mairena-lang',l)}catch(e){}if(l==='es')location.reload();else apply()}
+document.getElementById('lang-form').addEventListener('click',()=>setLanguage(lang==='es'?'en':'es'));window.addEventListener('storage',e=>{if(e.key==='mairena-lang-updated'){const current=localStorage.getItem('mairena-lang');if(current==='es'||current==='en')setLanguage(current);}else if(e.key==='mairena-lang'&&(e.newValue==='es'||e.newValue==='en')){if(e.newValue==='es')location.reload();else{lang='en';apply()}}});window.__qT=tr;window.__qGetLang=()=>lang;
+if(lang==='en')setTimeout(apply,0);
+})();
+</script>
 <script>
 /* ============================================================
    CUESTIONARIO
@@ -531,7 +559,8 @@ function pickR(gid, el){
 }
 function getRV(gid){
   const s = document.querySelector('#' + gid + ' .ro.sel');
-  return s ? (s.querySelector('.rl strong')?.textContent || s.querySelector('.rl')?.textContent || '') : '';
+  const strong=s&&s.querySelector('.rl strong');
+  return s ? (strong?.dataset.es || strong?.textContent || s.querySelector('.rl')?.textContent || '') : '';
 }
 function toggleT(card, max){
   const grid = card.closest('.tree-grid');
@@ -543,7 +572,7 @@ function toggleT(card, max){
   }
 }
 function getTrees(){
-  return Array.from(document.querySelectorAll('#tgrid .tree-card.sel')).map(c => c.dataset.name);
+  return Array.from(document.querySelectorAll('#tgrid .tree-card.sel')).map(c => c.dataset.esName||c.dataset.name);
 }
 function showV(id){ const e = document.getElementById(id); if (e) e.classList.add('on'); }
 function hideV(id){ const e = document.getElementById(id); if (e) e.classList.remove('on'); }
@@ -577,10 +606,13 @@ function prev(){
 function updateUI(){
   const pct = ((cur - 1) / TOTAL) * 100;
   document.getElementById('pfill').style.width = pct + '%';
-  document.getElementById('plabel').textContent = 'Pregunta ' + cur + ' de ' + TOTAL;
+  const en=window.__qGetLang&&window.__qGetLang()==='en',tr=window.__qEnglish;
+  document.getElementById('plabel').textContent = en ? 'Question ' + cur + ' of ' + TOTAL : 'Pregunta ' + cur + ' de ' + TOTAL;
+  document.querySelectorAll('.step-num').forEach((e,i)=>e.textContent=(en?'Question ':'Pregunta ')+(i+1));
   document.getElementById('btnPrev').style.display = cur > 1 ? '' : 'none';
-  document.getElementById('btnNext').textContent = cur === TOTAL ? 'Enviar mi voto' : 'Siguiente';
+  document.getElementById('btnNext').textContent = en ? (cur === TOTAL ? tr.send : tr.next) : (cur === TOTAL ? 'Enviar mi voto' : 'Siguiente');
 }
+window.__qUpdateUI=updateUI;
 /* ============================================================
    ENVIO A GOOGLE FORMS
    - Cada voto sale hacia el formulario de Google de Sandro.
@@ -637,7 +669,14 @@ function finish(){
   document.getElementById('thanks').classList.add('on');
   document.getElementById('foot').style.display = 'none';
 
-  const rows = [
+  const en=window.__qGetLang&&window.__qGetLang()==='en',tr=window.__qEnglish;
+  const treeNames=['Almez','Acebuche','Árbol del amor','Algarrobo','Encina','Granado'];
+  const translateAnswer=value=>{const el=Array.from(document.querySelectorAll('.rl strong')).find(e=>e.dataset.es===value);return el?el.textContent:value};
+  const rows = en ? [
+    [tr.summaryLabels[0],st.mairena.startsWith('S')?'Yes':'No'],[tr.summaryLabels[1],translateAnswer(st.zona)],
+    [tr.summaryLabels[2],translateAnswer(st.prio).length>40?translateAnswer(st.prio).slice(0,38)+'…':translateAnswer(st.prio)],[tr.summaryLabels[3],st.arboles.map(n=>tr.trees[treeNames.indexOf(n)]||n).join(', ')||'—'],
+    [tr.summaryLabels[4],st.calle||tr.notSpecified],[tr.summaryLabels[5],translateAnswer(st.proy).length>40?translateAnswer(st.proy).slice(0,38)+'…':translateAnswer(st.proy)]
+  ] : [
     ['Vecino/a de Mairena', st.mairena.startsWith('S') ? 'Sí' : 'No'],
     ['Tipo de zona', st.zona.split(' ')[0] + ' ' + (st.zona.split(' ')[1] || '')],
     ['Prioridad', st.prio.length > 40 ? st.prio.slice(0, 38) + '…' : st.prio],
@@ -650,7 +689,7 @@ function finish(){
   ).join('');
 
   document.getElementById('pfill').style.width = '100%';
-  document.getElementById('plabel').textContent = 'Completado';
+  document.getElementById('plabel').textContent = en ? tr.completed : 'Completado';
 }
 updateUI();
 </script>
