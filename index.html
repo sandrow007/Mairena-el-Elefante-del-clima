@@ -1,18 +1,465 @@
 <!doctype html>
 <html lang="es">
-
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Mairena del Aljarafe - Huecos OSM</title>
-    <meta http-equiv="refresh" content="0;url=mairena_osm_huecos.html">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mairena del Aljarafe · Visor 3D</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23f4f4f0'/><rect x='4' y='6' width='4' height='7' fill='%235b5bd6'/><rect x='9' y='3' width='4' height='10' fill='%23b58ae0'/></svg>">
+<style>
+:root{--ink:#242522;--muted:#65685f;--paper:#f4f4f0;--line:#d8d9d2;--accent:#5b5bd6}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{font:14px/1.4 system-ui,sans-serif;color:var(--ink);background:var(--paper);overflow:hidden}
+#visor{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#visor:active{cursor:grabbing}
+#hud{position:fixed;top:14px;left:14px;z-index:2;background:rgba(255,255,255,.92);backdrop-filter:blur(6px);border:1px solid var(--line);border-radius:12px;padding:12px 14px;max-width:min(420px,calc(100vw - 28px));max-height:calc(100dvh - 28px);overflow-y:auto;box-shadow:0 4px 18px rgba(0,0,0,.08)}
+h1{font:16px/1.2 Georgia,serif;margin:0 0 4px}
+.meta{color:var(--muted);font-size:12px;margin:0 0 9px}
+label{display:flex;gap:7px;align-items:center;font-size:13px;min-height:30px}
+button{font:12px/1 system-ui,sans-serif;border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 10px;cursor:pointer;margin:0 6px 6px 0}
+button:hover{background:var(--paper)}
+button.activo{background:var(--accent);border-color:var(--accent);color:#fff}
+input[type=search]{width:100%;font:13px system-ui,sans-serif;border:1px solid var(--line);border-radius:8px;padding:7px 10px;background:#fff;color:var(--ink)}
+select{font:12px system-ui,sans-serif;border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:#fff;color:var(--ink);max-width:100%}
+.fila{display:flex;flex-wrap:wrap;align-items:center;margin:4px 0}
+.grupo{border-top:1px solid var(--line);margin-top:8px;padding-top:8px}
+.grupo-t{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:2px 0 6px}
+.chk{display:inline-flex;gap:5px;align-items:center;font-size:12px;border:1px solid var(--line);border-radius:999px;padding:4px 10px;margin:0 6px 6px 0;background:#fff;cursor:pointer;user-select:none}
+.chk input{accent-color:var(--accent)}
+#barra{height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin-top:8px}
+#barra i{display:block;height:100%;width:0;background:var(--accent);transition:width .15s}
+#estado{font-size:12px;color:var(--muted);margin-top:6px}
+#fps{position:fixed;top:14px;right:14px;z-index:2;font-size:11px;color:var(--muted);background:rgba(255,255,255,.85);border:1px solid var(--line);border-radius:8px;padding:4px 8px}
+#tip{position:fixed;z-index:3;pointer-events:none;background:rgba(36,37,34,.92);color:#fff;font-size:12px;padding:5px 9px;border-radius:7px;transform:translate(-50%,calc(-100% - 12px));white-space:nowrap;display:none}
+#ayuda{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);z-index:2;font-size:11px;color:var(--muted);background:rgba(255,255,255,.8);border:1px solid var(--line);border-radius:999px;padding:5px 14px;white-space:nowrap;max-width:calc(100vw - 24px);overflow:hidden;text-overflow:ellipsis}
+#atrib{position:fixed;bottom:12px;right:12px;z-index:2;font-size:10px;color:#fff;background:rgba(0,0,0,.45);border-radius:6px;padding:3px 8px;display:none}
+#fallo{position:fixed;inset:0;display:grid;place-items:center;background:var(--paper);padding:24px;text-align:center;color:var(--muted)}
+#plegar{float:right;margin:0 0 4px 8px;font-size:13px;padding:4px 9px}
+#hud.min .cuerpo{display:none}
+[hidden]{display:none!important}
+</style>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/","three-mesh-bvh":"./vendor/three-mesh-bvh.module.js"}}</script>
+<base target="_blank">
 </head>
-
 <body>
-    <script>location.replace("mairena_osm_huecos.html");</script>
-    <noscript>
-        <p><a href="mairena_osm_huecos.html">Abrir el mapa</a></p>
-    </noscript>
-</body>
+<canvas id="visor" aria-label="Modelo 3D de Mairena del Aljarafe"></canvas>
+<section id="hud">
+  <button id="plegar" title="Plegar panel">–</button>
+  <h1>Mairena del Aljarafe · 3D</h1>
+  <p class="meta">Catastro + OSM + inventario municipal</p>
+  <div class="cuerpo">
+  <input id="buscar" type="search" list="lugares" placeholder="Buscar barrio o calle…" aria-label="Buscar barrio o calle">
+  <datalist id="lugares"></datalist>
+  <div class="fila"><button id="ir">Ir al lugar</button><button id="reiniciar">Vista general</button><button id="cenital">Vista cenital</button></div>
+  <div class="fila"><button id="girar" aria-pressed="false">⟳ Girar</button><button id="png">📷 PNG</button></div>
+  <div class="grupo"><div class="grupo-t">Fondo</div>
+    <div class="fila"><select id="fondo" aria-label="Color de fondo y ortofoto">
+      <option value="marfil" selected>Marfil (claro)</option>
+      <option value="blanco">Blanco</option>
+      <option value="gris">Gris</option>
+      <option value="noche">Noche (oscuro)</option>
+      <option value="ortofoto">Ortofoto PNOA 🛰</option>
+    </select></div>
+  </div>
+  <div class="grupo"><div class="grupo-t">Capas</div>
+    <label class="chk"><input type="checkbox" data-capa="edificios" checked> Edificios</label>
+    <label class="chk"><input type="checkbox" data-capa="calles" checked> Calles</label>
+    <label class="chk"><input type="checkbox" data-capa="parques" checked> Parques</label>
+    <label class="chk"><input type="checkbox" data-capa="arboles" checked> Árboles</label>
+    <label class="chk"><input type="checkbox" data-capa="alcorques" checked> Alcorques</label>
+    <label class="chk"><input type="checkbox" id="barrios-chk" checked> Barrios</label>
+    <label class="chk"><input type="checkbox" id="etiquetas"> Nombres (GLB)</label>
+    <label class="chk"><input type="checkbox" id="terreno"> Terreno y base</label>
+  </div>
+  <div id="barra"><i></i></div>
+  <div id="estado">Cargando modelo…</div>
+  </div>
+</section>
+<div id="fps" hidden></div>
+<div id="tip"></div>
+<div id="ayuda">Arrastra: girar · Rueda: zoom al cursor · Clic derecho: desplazar · Clic en edificio: acercar · Flechas/WASD: paneo</div>
+<div id="atrib">Ortofoto PNOA © IGN España</div>
+<div id="fallo" hidden><div><strong>No se pudo iniciar WebGL.</strong><br>Prueba en un navegador moderno o abre el GLB en Blender.</div></div>
+<script type="module">
+import * as THREE from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {DRACOLoader} from 'three/addons/loaders/DRACOLoader.js';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {computeBoundsTree,disposeBoundsTree,acceleratedRaycast} from 'three-mesh-bvh';
+THREE.BufferGeometry.prototype.computeBoundsTree=computeBoundsTree;
+THREE.BufferGeometry.prototype.disposeBoundsTree=disposeBoundsTree;
+THREE.Mesh.prototype.raycast=acceleratedRaycast;
 
+const BARRIOS=[["Mairena del Aljarafe", 3.8539, 1.4095], ["Simón Verde", 8.1969, 0.2339], ["Urbanización La Puebla del Marqués", 2.653, -0.6192], ["Urbanización Las Tres Barras", 1.7151, -0.9028], ["Petit Simón", 8.5488, -0.2422], ["Urbanización Mampela", 1.4554, -2.3234], ["Ciudad Aljarafe", 7.2564, 2.4065], ["Aljarasol", 6.9933, 2.9135], ["Alero de Sevilla", 8.355, 3.2831], ["Pinar de Simón Verde", 8.3171, 2.6609], ["Circuito I", 5.7722, 2.1027], ["Ciudad Expo", 5.6649, 3.1964], ["Los Olivos", 6.3533, 2.1442], ["Las Brisas I", 6.2204, 2.6571], ["Las Brisas II", 7.9638, 1.884], ["Ateneo", 3.949, 2.3328], ["El Almendral", 5.3981, 0.1699], ["Mairena Pueblo", 3.1437, 1.6351], ["Nuevo Bulevar", 4.3022, 0.6168], ["La Prusiana", 3.0203, 0.845], ["Lepanto", 7.7055, 3.5848], ["Ciudad Expo", 5.6392, 2.6948], ["Cavaleri", 6.4445, 3.3887], ["Los Alcores", 6.7655, 1.7968], ["Altos de Simón Verde", 7.8166, 2.2527], ["Atarazana", 7.2164, 4.2389], ["Urbanización Java", 5.9464, -0.5527], ["Urbanización Java II", 6.1633, -0.302]];
+const CALLES=[["Acceso a Mairena del Aljarafe", 2.6763, 2.576], ["Autovía de San Juan de Aznalfarache a Mairena del Aljarafe", 5.2983, 3.5047], ["Avenida Albert Einstein", 4.2958, 0.2087], ["Avenida Asia", 5.4215, 3.4902], ["Avenida Clara Campoamor", 4.2409, 1.4538], ["Avenida Constitución", 6.69, 3.206], ["Avenida Europa", 5.8097, 2.8841], ["Avenida Las Tres Barras", 1.4069, -1.0544], ["Avenida Magdalena Sofía Barat", 7.0712, 2.0319], ["Avenida Mariana Pineda", 3.5564, 2.6777], ["Avenida Marie Curie", 4.7084, 0.5238], ["Avenida Monte Aljarafe", 6.7448, 3.3682], ["Avenida Oceanía", 5.9995, 3.235], ["Avenida Porzuna", 7.2361, -0.1128], ["Avenida Rodrigo de Triana", 5.6475, 1.9805], ["Avenida San Juan - Palomares", 7.6031, 2.2304], ["Avenida de Andalucía", 2.4699, 2.2017], ["Avenida de Cristobal Colón", 5.9874, 2.5338], ["Avenida de Cuba", 6.5936, 3.3392], ["Avenida de Mairena", 7.4054, 4.0011], ["Avenida de San Juan", 4.7231, 2.3147], ["Avenida de la Filosofía", 4.1177, 0.7023], ["Avenida de la Navegación", 1.6296, -0.8852], ["Avenida de la República Española", 2.657, 1.7276], ["Avenida de la Sabiduría", 4.0402, 0.9691], ["Avenida de las Américas", 5.556, 2.4848], ["Avenida de las Civilizaciones", 3.1251, 0.2655], ["Avenida de los Descubrimientos", 6.0232, 2.8722], ["Avenida de los Olmos", 4.8288, 1.3014], ["Avenida de los Pinos", 8.4542, 2.6636], ["Avenida del Almendral", 5.566, 0.1712], ["Avenida del Conocimiento", 5.1172, 0.5946], ["Avenida del Jardinillo", 3.5351, 0.9322], ["Avenida del Olivo", 3.0555, 0.5938], ["Avenida del Sur", 3.2658, 0.857], ["Barriada Petit Simon", 8.636, -0.4724], ["Barriada residencial Aljarasol", 6.9514, 2.9418], ["Barrio de la Prusiana", 3.0435, 0.8071], ["Calahoya", 1.9499, 0.1651], ["Calle Abeto", 4.6734, 2.0127], ["Calle Acacia", 5.0436, 1.582], ["Calle Aceituneras", 7.8896, -0.4302], ["Calle Africa", 2.3786, -0.8597], ["Calle Aguamarina", 6.8302, 4.51], ["Calle Ajo", 2.5206, -1.2663], ["Calle Ajonjoli", 2.1475, -0.5376], ["Calle Albacete", 7.6801, 3.0332], ["Calle Alcalde Manuel de Reyes", 3.3856, 1.3499], ["Calle Alcázar", 8.1975, -0.4356], ["Calle Alhambra", 8.4446, -0.5323], ["Calle Alhelí", 7.0732, 3.8972], ["Calle Alicante", 7.6727, 3.6287], ["Calle Alisios", 6.5316, 1.7938], ["Calle Almazara", 3.5159, 0.719], ["Calle Almería", 2.6542, 1.4986], ["Calle Amadeo Vives", 3.0589, -2.2834], ["Calle Américo Vespucio", 5.2269, 2.8321], ["Calle Antonio Buero Vallejo", 3.1714, 1.914], ["Calle Antonio Gala", 3.0107, 2.1691], ["Calle Antonio Machado", 3.3201, 1.2967], ["Calle Apio", 2.7457, -0.8604], ["Calle Apolo", 5.479, 3.8912], ["Calle Arce", 5.1733, 1.651], ["Calle Arcipreste", 7.7438, 1.0735], ["Calle Aristóteles", 4.067, 0.8424], ["Calle Arroyo Riopudio", -1.0589, -4.6456], ["Calle Artesanía", 4.7251, 4.2291], ["Calle Arándano", 5.5041, 0.7099], ["Calle Atenea", 6.2517, 3.1731], ["Calle Aurora Boreal", 6.1583, 2.3869], ["Calle Austral", 6.08, 2.2506], ["Calle Avance", 3.3674, 3.4031], ["Calle Averroes", 4.0823, 0.2653], ["Calle Azabache", 6.7943, 4.4717], ["Calle Azafairón", 3.6415, 0.7869], ["Calle Azafrán", 2.7407, -0.7659], ["Calle Azahar", 6.8634, 3.7742], ["Calle Azucena", 6.9278, 3.954], ["Calle Badajoz", 8.0395, 3.9705], ["Calle Balance", 3.4905, 3.2727], ["Calle Ballestilla", 1.0572, -1.4459], ["Calle Barcelona", 7.678, 4.0559], ["Calle Beatriz de Silva", 1.919, -0.84], ["Calle Bilbao", 7.9387, 3.4488], ["Calle Bitácora", 1.1468, -0.5386], ["Calle Boticario", 7.8109, 0.6033], ["Calle Brigada Juan Morales Parra", 6.4077, 1.7351], ["Calle Brújula", 4.8201, 4.05], ["Calle Buganvilla", 6.8151, 4.0391], ["Calle Burgos", 8.0195, 4.1315], ["Calle Calahoya", 2.0325, 0.1467], ["Calle Camarada Jose M. García Caparrós", 4.0523, 1.7915], ["Calle Camelia", 7.0801, 3.8177], ["Calle Camilo José Cela", 3.286, 2.224], ["Calle Camino de las Estrellas", 1.2745, -0.8512], ["Calle Campo Alegre", 4.1816, 2.0217], ["Calle Canarias", 2.699, 2.2705], ["Calle Canela", 2.7482, -0.6606], ["Calle Caoba", 4.834, 2.0111], ["Calle Carlos Marx", 3.6425, 1.3593], ["Calle Carmona", 8.3933, 3.8126], ["Calle Casagrande", 7.7374, -0.2351], ["Calle Castellón de la Plana", 7.8245, 3.5379], ["Calle Castilla La Mancha", 2.4276, 2.0115], ["Calle Castilla León", 2.376, 1.8638], ["Calle Cataluña", 2.7316, 1.7898], ["Calle Cañada de la Viña", 7.8252, -0.7829], ["Calle Cereza", 5.0699, -0.0838], ["Calle Cerro Aljarasol", 7.0358, 3.4843], ["Calle Cerro Blanco", 7.3793, 3.1798], ["Calle Cerro Verde", 7.3135, 3.3453], ["Calle Cerro Viejo", 7.1322, 3.008], ["Calle Cerro de Andalucía", 6.8911, 3.3228], ["Calle Cerro de La Atalaya", 7.2929, 3.6997], ["Calle Cerro de Mairena", 7.1019, 3.5528], ["Calle Cerro de la Campana", 7.3155, 3.1248], ["Calle Cerro de la Expo", 6.8059, 3.3311], ["Calle Cerro de la Florida", 7.2789, 3.6065], ["Calle Cerro de la Piedra", 7.1711, 3.6244], ["Calle Cerro de las Flores", 7.2039, 3.3175], ["Calle Cerro de las Marismas", 7.0831, 3.0966], ["Calle Cerro de los Olivos", 7.0353, 3.0216], ["Calle Cerro de los Tilos", 7.2741, 3.2511], ["Calle Cerro de los Vientos", 7.0567, 3.1692], ["Calle Cervantes", 2.4791, 0.9825], ["Calle Ceuta", 2.4602, 1.7336], ["Calle Ciaurriz", 8.0118, 0.3557], ["Calle Ciclón", 6.4213, 2.039], ["Calle Cierzo", 6.1105, 2.785], ["Calle Ciruela", 5.3883, 0.2945], ["Calle Ciudad Real", 7.7315, 3.0072], ["Calle Clara Begonia", 7.169, 4.3501], ["Calle Clavel", 6.802, 4.1266], ["Calle Clavo", 2.3766, -0.7566], ["Calle Comercio", 4.3618, 3.588], ["Calle Comino", 2.2582, -0.5222], ["Calle Congreso", 2.8977, 3.2687], ["Calle Coria del Río", 3.8896, 1.138], ["Calle Corinto", 6.5121, 3.8188], ["Calle Cristobal Halfter", 7.358, 4.0985], ["Calle Cuadrante", 1.3478, -1.3349], ["Calle Cuatro", 4.2925, 3.4378], ["Calle Cuenca", 7.848, 3.105], ["Calle Culantro", 2.3312, -0.6923], ["Calle Cádiz", 3.783, 0.9414], ["Calle Córdoba", 3.8696, 1.0182], ["Calle Desarrollo", 3.1339, 3.088], ["Calle Diseño", 4.2081, 3.2814], ["Calle Doctor Fleming", 7.3267, 4.3453], ["Calle Doctor Marañón", 7.5841, 4.3223], ["Calle Dolores Ibárruri", 4.2591, 2.6009], ["Calle Dolores Solano", 3.7502, 1.4372], ["Calle Dos", 4.4347, 3.5049], ["Calle Dulce del Moral", 3.9129, 2.6828], ["Calle Ecija", 8.3328, 3.8632], ["Calle El Cucadero", 6.0798, 3.5916], ["Calle Empresa", 2.6173, 3.281], ["Calle Encina", 5.7875, -0.0637], ["Calle Enrique Granados", 7.252, 4.0344], ["Calle Eolo", 7.9246, 2.5213], ["Calle Esmeralda", 6.6215, 4.2937], ["Calle Esparta", 6.2165, 4.1409], ["Calle Exposición", 5.7268, 4.6046], ["Calle Extremadura", 2.5818, 2.4393], ["Calle Federico García Lorca", 2.7512, 1.1147], ["Calle Fedra", 6.208, 4.253], ["Calle Felipe Pedrel", 7.6172, 3.8438], ["Calle Fernán Caballero", 3.152, 2.3701], ["Calle Flor del Romero", 3.1869, 0.9458], ["Calle Florencia", 2.0196, -0.0452], ["Calle Fomento", 3.9075, 3.3149], ["Calle Formación", 2.6981, 3.263], ["Calle Fresa", 5.678, 0.3449], ["Calle Fuente Clara", 7.6717, 1.1604], ["Calle Galeno", 8.3676, 0.9559], ["Calle Galicia", 2.6232, 2.3608], ["Calle Genil", 2.9143, 0.7917], ["Calle Geranio", 6.9417, 3.9118], ["Calle Gerona", 8.0092, 3.8819], ["Calle Gestión", 3.1137, 3.1474], ["Calle Giralda", 7.8413, -0.7101], ["Calle Gladiolo", 6.7027, 3.9311], ["Calle Gonzalo Torrente Ballester", 4.0376, 2.4494], ["Calle Gonzalo de Bilbao", 2.4928, 0.4891], ["Calle Goya", 2.4525, 1.0845], ["Calle Granada", 7.9237, 3.8311], ["Calle Granado", 5.6357, 0.4784], ["Calle Gregorio Ordóñez", 4.0063, 1.3683], ["Calle Gremios", 4.3963, 3.1915], ["Calle Guadaira", 2.8932, 0.6835], ["Calle Guadalajara", 7.8023, 2.9712], ["Calle Guadalquivir", 2.7561, 0.917], ["Calle Guadiamar", 2.8045, 0.8189], ["Calle Guadiato", 2.8021, 0.6333], ["Calle Hacienda", 4.9145, 4.4366], ["Calle Haya", 5.0608, 1.7245], ["Calle Hermanas Mirabal", 3.0777, 2.7881], ["Calle Hermanos Álvarez Quintero", 3.8479, 2.1338], ["Calle Herradura", 7.7864, 0.0909], ["Calle Hinojo", 2.8792, -0.823], ["Calle Hipatia de Alejandría", 5.2733, 0.4084], ["Calle Hipócrates", 4.1838, 1.0532], ["Calle Horizonte", 4.5505, 3.6063], ["Calle Huelva", 3.1131, 1.0945], ["Calle Huracán", 6.4171, 2.3328], ["Calle Ignacio Zuloaga", 2.3759, 0.499], ["Calle Industria", 3.5718, 3.3649], ["Calle Innovación", 4.8119, 3.7522], ["Calle Isaac Newton", 4.5586, 0.4065], ["Calle Isadora Duncan", 3.917, 2.6212], ["Calle Jacaranda", 7.8222, -0.5703], ["Calle Jacinto", 6.7637, 3.6681], ["Calle Jacinto Benavente", 3.2314, 2.3076], ["Calle Jaime Balmes", 7.8905, 4.1387], ["Calle Jara", 7.0015, 1.5722], ["Calle Jardín", 5.3952, -0.2702], ["Calle Jazmín", 7.017, 4.1293], ["Calle Jaén", 2.766, 1.374], ["Calle Joaquin Rodrigo", 3.6664, -2.2194], ["Calle Joaquín Sorolla", 2.4228, 0.6376], ["Calle Joaquín Turina", 7.5194, 3.8391], ["Calle José Echegaray", 3.6516, 2.2258], ["Calle Juan Ramón Jiménez", 3.8181, 2.0809], ["Calle Juan Sebastián Elcano", 5.0998, 3.0592], ["Calle Juan de Austria", 7.4925, 3.8622], ["Calle Juglar", 3.9697, 1.7454], ["Calle Juventud", 5.0693, 3.8364], ["Calle La Calleja", 2.9822, 1.2283], ["Calle La Pinta", 5.6864, 3.2622], ["Calle La Santa María", 5.6246, 3.3094], ["Calle Las Hespérides", 7.5085, 1.6863], ["Calle Las Tuyas", 6.1392, -0.2093], ["Calle Laurel", 2.489, -0.4634], ["Calle Lentisco", 6.9073, 1.6016], ["Calle Lepanto", 6.7493, 2.2578], ["Calle Limón", 5.5864, 0.6105], ["Calle Logroño", 8.2593, 3.9101], ["Calle Lonja", 5.337, 3.6258], ["Calle Los Rosales", 7.5688, -0.194], ["Calle Lérida", 8.2069, 3.7175], ["Calle Macarena", 2.1902, -0.9008], ["Calle Madrid", 3.5658, 1.208], ["Calle Maestral", 6.2521, 2.6183], ["Calle Maimonides", 4.1447, -0.0448], ["Calle Majarana", 7.7311, 0.4639], ["Calle Managua", 6.9083, 2.5429], ["Calle Mandarina", 5.0038, 0.0503], ["Calle Manuel Alonso Vicedo", 7.4253, 1.8623], ["Calle Manuel Castillo", 7.3087, 4.058], ["Calle Manuel de Falla", 7.6442, 3.9549], ["Calle Manufactura", 5.5256, 4.4771], ["Calle Manzana", 5.3113, 0.1409], ["Calle Manzanilla", 3.2619, 0.6118], ["Calle Mar Báltico", 7.8784, 2.064], ["Calle Mar Mediterráneo", 8.0277, 1.8449], ["Calle Marco Polo", 5.7809, 2.0451], ["Calle María Dolores", 2.4107, -0.9933], ["Calle María Silva Cruz", 3.3016, 2.5021], ["Calle María Zambrano", 8.1276, -0.519], ["Calle Melilla", 2.5316, 1.6367], ["Calle Mezquita", 8.4812, -0.6109], ["Calle Miguel Delibes", 3.3282, 2.1558], ["Calle Miguel Hernández", 7.7954, 3.1494], ["Calle Milán", 1.7062, -0.2673], ["Calle Monte Alto", 6.4709, 4.3923], ["Calle Monzón", 6.5257, 2.3873], ["Calle Moraima", 8.6572, 0.1642], ["Calle Murcia", 7.9548, 3.288], ["Calle Murillo", 2.4715, 0.8702], ["Calle Muérdago", 8.153, -0.3102], ["Calle Muñoz y Pavón", 3.8418, 2.0171], ["Calle Málaga", 2.5321, 1.4181], ["Calle Naranja", 5.7845, 0.1068], ["Calle Nardo", 7.1431, 3.9679], ["Calle Navarra", 7.9609, 3.7075], ["Calle Neptuno", 5.5047, 4.0094], ["Calle Nicolás Copérnico", 5.0568, 0.7059], ["Calle Nobel", 5.5421, 4.3861], ["Calle Nogal", 5.3861, -0.0575], ["Calle Nueva", 3.1329, 1.4335], ["Calle Nuria", 2.2219, -1.1292], ["Calle Nápoles", 1.6911, -0.1741], ["Calle Octante", 1.4975, -1.2932], ["Calle Océano Atlántico", 8.0927, 1.7934], ["Calle Océano Pacífico", 7.9591, 1.8885], ["Calle Océano Índico", 7.8416, 1.8438], ["Calle Olivar de la Cruz", 3.8747, 1.5951], ["Calle Orégano", 2.4238, -0.7117], ["Calle Osa Mayor", 6.296, 1.848], ["Calle Osa menor", 6.1355, 1.7529], ["Calle Pablo Neruda", 7.919, 3.3287], ["Calle Pablo Picasso", 7.7132, 2.9194], ["Calle Parmenides", 4.6293, 0.7766], ["Calle País Vasco", 2.6219, 2.1326], ["Calle Pensamiento", 6.714, 4.1977], ["Calle Petunia", 6.8075, 3.608], ["Calle Pi y Margall", 4.4516, 1.5797], ["Calle Pilar Miró", 3.477, 2.4794], ["Calle Pimentón", 2.575, -0.8216], ["Calle Pimienta", 2.3903, -0.5061], ["Calle Pinsapo", 4.5211, 1.6965], ["Calle Platero", 7.5374, 4.4023], ["Calle Platón", 3.781, 0.5501], ["Calle Plaza Giralda", 7.8754, -0.6292], ["Calle Plutón", 2.4285, -1.1697], ["Calle Pocillo de Gilvan", 6.0771, 3.7465], ["Calle Poeta Luis Rosales", 3.0435, 2.0773], ["Calle Pomelo", 5.7552, 0.2342], ["Calle Poseidón", 5.9527, 3.9423], ["Calle Pozo Nuevo", 2.8973, 1.4759], ["Calle Pueblo Alto", 7.5299, 3.9797], ["Calle Quevedo", 2.7396, 1.248], ["Calle Roble", 4.4657, 1.8661], ["Calle Roma", 2.0899, 0.0573], ["Calle Romero", 6.9573, 1.4963], ["Calle Ronda de Cavaleri", 6.2432, 3.402], ["Calle Ronda de la Feria", 2.5233, 1.329], ["Calle Rosa Chacel", 4.0939, 2.5395], ["Calle Rosa de los Vientos", 1.1932, -1.2288], ["Calle Rubí", 6.5135, 4.5303], ["Calle Salvador Dalí", 2.3621, 0.7061], ["Calle San Isidro Labrador", 6.6101, 1.5731], ["Calle San José Obrero", 6.266, 1.5756], ["Calle San Sebastián", 7.6453, 3.4958], ["Calle Santa Ana", 7.7459, 2.749], ["Calle Santa Teresa de Jesús", 1.8157, -1.1472], ["Calle Santa Ángela de la Cruz", 1.6662, -0.4609], ["Calle Sauce", 4.5726, 1.7189], ["Calle Segovia", 8.3192, 3.9549], ["Calle Senador Enrique García Casas", 3.3508, 1.9789], ["Calle Sevilla", 3.6389, 0.9278], ["Calle Sextante", 1.1966, -1.3596], ["Calle Simún", 6.4028, 2.5162], ["Calle Siroco", 6.2723, 2.5395], ["Calle Sol", 2.2513, -1.4264], ["Calle Solano", 6.1096, 2.5922], ["Calle Sócrates", 4.5696, 1.1861], ["Calle Tarragona", 8.0124, 3.6006], ["Calle Tartessos", 8.3224, 2.3782], ["Calle Terral", 7.8474, 2.4142], ["Calle Teruel", 7.9315, 3.2086], ["Calle Tifón", 6.4722, 1.8906], ["Calle Tiguantepe", 6.3132, 2.938], ["Calle Toledo", 7.9203, 3.9684], ["Calle Tomares", 3.794, 0.9753], ["Calle Tomillo", 2.886, -0.4513], ["Calle Topacio", 6.3323, 4.352], ["Calle Tornado", 6.5648, 2.0231], ["Calle Torre del Oro", 8.4524, -0.565], ["Calle Tramontana", 6.2731, 2.8042], ["Calle Trascorrales", 3.2199, 1.6438], ["Calle Trasera Monte Aljarafe", 7.1331, 3.7521], ["Calle Tres", 4.3612, 3.4706], ["Calle Triana", 7.4377, 3.4261], ["Calle Trovador", 4.0205, 1.7016], ["Calle Troya", 6.3918, 3.983], ["Calle Tulipán", 6.7392, 3.7147], ["Calle Turín", 1.5695, -0.2049], ["Calle Ulises", 6.1754, 4.2062], ["Calle Uno", 4.505, 3.5376], ["Calle Urano", 2.4187, -1.0756], ["Calle Valencia", 7.6669, 3.7458], ["Calle Valle Blanco", 8.5956, 1.3821], ["Calle Valle Colorado", 8.3257, 0.1052], ["Calle Valle Verde", 7.5475, -0.3817], ["Calle Valparaíso", 8.0419, 2.8008], ["Calle Vasco de Gama", 5.0335, 3.0875], ["Calle Veleta", 7.9908, 2.6649], ["Calle Velázquez", 2.3954, 0.8617], ["Calle Venecia", 1.7828, 0.1307], ["Calle Verde Albahaca", 6.7396, 1.1781], ["Calle Verde Hierba", 6.8536, 1.178], ["Calle Verde Menta", 6.8591, 1.3358], ["Calle Verde Olivo", 6.9226, 1.455], ["Calle Vicente Aleixandre", 7.9178, 4.1792], ["Calle Virgen de la Salud", 7.6016, 2.7035], ["Calle Vía Láctea", 2.3867, -1.2479], ["Calle Zafairón", 1.947, -2.9806], ["Calle Zafiro", 6.5908, 4.4276], ["Calle Zaragoza", 7.71, 3.172], ["Calle Zeus", 5.4928, 4.1311], ["Calle Zorzaleña", 3.2378, 0.4372], ["Calle Zurbarán", 2.2102, 0.8843], ["Calle Zurraque", 3.2297, 1.1125], ["Calle de Cura Don Amadeo Moreno", 3.2051, 1.1478], ["Calle de Francisco Madrigal Marín", 7.7531, 4.4612], ["Calle de Pedro Muñoz Seca", 3.7092, 2.0607], ["Calle de San Ildefonso", 3.7758, 1.4801], ["Calle de la Danza", 3.2205, 1.8261], ["Calle de la Escultura", 3.0773, 1.9824], ["Calle de la Música", 3.2603, 1.786], ["Calle de la Pintura", 3.0238, 1.913], ["Calle de las Partidas", 3.9603, 1.6266], ["Calle del Esquimo", 3.3623, 0.9042], ["Calle del Teatro", 3.3192, 2.0812], ["Calle del Valverdillo", 4.0014, 2.2706], ["Calle el Greco", 2.3031, 0.8769], ["Calle la Elipse", 7.7115, 1.2132], ["Calle la Niña", 5.4424, 2.9811], ["Calle los Bejaranos", 7.6426, -0.3144], ["Calle Álamo", 5.3019, 1.7301], ["Calle Ávila", 8.0196, 4.1318], ["Calle Ébano", 4.6681, 2.1732], ["Calle Ítaca", 6.5222, 3.8727], ["Callejón de la Huerta", 2.9243, 1.235], ["Camino Granadillos", 2.0219, 0.5594], ["Camino de Bollullos", 2.825, 1.5874], ["Camino de Gelves", 4.5451, 1.4968], ["Camino de Jardinillo", 3.4544, 1.0502], ["Camino de Peralta", 2.2966, 1.7278], ["Camino de Santa Rita", 4.147, 2.2203], ["Camino viejo de Bollullos", -0.609, 1.361], ["Carretera Mairena-Almensilla", 2.5324, 0.6657], ["Carretera San Juan - Palomares,", 5.9251, -0.2354], ["Carretera de Mairena del Aljarafe a Almensilla", 2.2871, 0.1647], ["Carretera de Palomares", 2.6206, 0.7616], ["Cañada Real de las Islas", -2.0364, -2.9176], ["Circunvalación del área metropolitana de Sevilla", -3.8874, -3.0072], ["Clara Campoamor", 6.6453, 4.6075], ["Cordel de Triana a Villamanrique", -7.4548, -3.2166], ["Corredor Verde Metropolitano", 8.5868, 2.2803], ["Cuesta de Cross", 8.6395, 3.6857], ["Glorieta José Martínez Vela \"Pepe El Mudo\"", 2.6076, 0.8071], ["Las Hespérides", 7.4282, 1.7749], ["Mirador de Montelar", 7.0142, 4.5016], ["Nicaragua", 6.5686, 2.6326], ["Plaza Doña Beatriz", 2.2978, -0.9966], ["Plaza Doña Margarita", 2.4775, -0.8944], ["Plaza Doña Rocio", 2.272, -0.9071], ["Plaza Doña Rosa", 2.5613, -0.9956], ["Puente Romano", -1.7508, 1.3822], ["Rampa parking", 7.3485, 2.7591], ["Ronda Urbana Sur de Mairena delAljarafe", 4.955, 1.0557], ["Urbanización Hacienda los Olivos", 6.1764, 2.0577], ["Urbanización Ribera de Porzuna", 4.9555, 1.4112], ["Urbanización Santa Rita", 5.6769, 4.0884], ["Vial Metropolitano del Aljarafe", 4.7325, 2.8549]];
+
+const canvas=document.getElementById('visor'),estado=document.getElementById('estado'),
+      barra=document.querySelector('#barra i'),tip=document.getElementById('tip'),
+      fpsBox=document.getElementById('fps'),atrib=document.getElementById('atrib');
+window.__seek=()=>{};window.__SCENE_READY__=false;
+
+const CAT={ // material → etiqueta legible (clave sin acentos ni símbolos)
+ 'osm street network':'Vía OSM','main osm streets':'Calle principal','official parks and gardens':'Parque o jardín oficial',
+ 'empty municipal tree pits':'Alcorque vacío (inventario)','catastro missing in osm':'Edificio en Catastro ausente en OSM',
+ 'violet roof equipment':'Equipamiento en cubierta','estimated extrusion':'Extrusión estimada (sin altura)',
+ 'pale lavender roof':'Cubierta','osm documented height':'Altura documentada OSM',
+ 'blue grey windows':'Ventanal','limestone cut edge':'Borde de base','osm trees':'Árbol OSM',
+ 'municipal inventory trees':'Árbol (inventario municipal)','ivory municipal terrain':'Terreno'};
+const norm=s=>(s||'').toLowerCase().replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+function catDe(mat){
+ const n=norm(mat);
+ for(const k in CAT)if(n.startsWith(k))return CAT[k];
+ return mat||'Elemento'}
+
+// Buscador: datalist con barrios y calles
+const buscar=document.getElementById('buscar'),datalist=document.getElementById('lugares');
+const LUGARES=[...BARRIOS.map(b=>({n:'📍 '+b[0],x:b[1],z:b[2]})),...CALLES.map(c=>({n:c[0],x:c[1],z:c[2]}))];
+datalist.innerHTML=LUGARES.map(l=>'<option value="'+l.n.replace(/"/g,'&quot;')+'">').join('');
+
+// Fondos disponibles
+const FONDOS={marfil:0xf4f4f0,blanco:0xffffff,gris:0xe2e4e6,noche:0x12181f};
+
+// Ortofoto PNOA: plano alineado con el modelo (bbox UTM EPSG:25830 → esquinas lon/lat → coords modelo)
+const ORTO={
+ url:'https://www.ign.es/wms-inspire/pnoa-ma?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&LAYERS=OI.OrthoimageCoverage&STYLES=&CRS=EPSG:25830&BBOX=222298.72,4134340.11,231512.15,4139254.61&WIDTH=2048&HEIGHT=2048&FORMAT=image/jpeg',
+ xmin:-9.381,xmax:9.324,zmin:-5.276,zmax:5.102};
+
+// Perímetro administrativo oficial (coords del modelo) para recortar la ortofoto
+const FRONTERA=[[-8.7971,4.0366],[-8.2621,3.726],[-8.0078,3.5681],[-7.8171,3.4742],[-7.5801,3.3349],[-7.4619,3.2871],[-6.9324,3.1125],[-6.8736,3.1403],[-6.8241,3.1885],[-6.7483,3.2418],[-6.6005,3.3066],[-6.4878,3.3307],[-6.4178,3.3305],[-5.8841,3.1078],[-5.8755,2.944],[-5.7955,3.0092],[-5.5352,3.1501],[-5.1874,3.4014],[-5.0396,3.4624],[-4.0752,3.7554],[-3.9579,3.8033],[-3.5612,3.7823],[-3.3473,3.7835],[-3.0487,3.7536],[-2.8591,3.7534],[-2.4586,3.7861],[-2.335,3.7781],[-2.2746,3.7344],[-2.0932,3.6608],[-1.928,3.6433],[-1.7717,3.6581],[-1.62,3.6572],[-1.477,3.6325],[-1.3428,3.6482],[-1.2949,4.3158],[-1.2872,4.5486],[-1.3046,4.6905],[-0.7728,4.7051],[-0.5335,4.3925],[-0.3661,4.142],[-0.5238,3.9581],[-0.6031,3.9765],[-0.6397,3.8323],[-0.0673,3.5069],[0.1535,3.7229],[0.2515,3.8531],[0.3646,3.4609],[0.4686,3.4019],[0.9412,3.3207],[1.2039,3.2285],[1.7992,2.992],[1.9466,2.9814],[2.215,2.7534],[2.6451,2.5054],[2.6883,2.3876],[2.9744,2.3405],[3.2487,2.2379],[3.507,2.2573],[3.6777,2.224],[3.8051,2.1541],[3.9986,2.0183],[4.0696,1.9923],[4.243,2.2297],[4.5831,2.1229],[4.6049,2.3635],[4.6514,2.5054],[4.7142,2.5949],[4.8001,2.654],[4.8585,2.6719],[4.9799,2.5943],[5.0932,2.4532],[5.2573,2.2169],[5.4671,1.8514],[5.711,1.3635],[5.7735,1.3197],[6.0725,1.304],[6.1668,1.3151],[6.2458,1.3502],[6.2918,1.4126],[6.3153,1.6489],[6.3336,1.7179],[6.39,1.794],[6.4655,1.8413],[6.5391,1.8309],[6.6651,1.7772],[6.8428,1.6518],[6.957,1.5366],[7.0464,1.4639],[7.2117,1.3259],[7.4261,1.5574],[7.5017,1.4937],[7.6369,1.7015],[7.8463,2.0062],[7.8933,2.0254],[7.937,2.0102],[8.168,2.4035],[8.3317,2.361],[8.4027,2.1439],[8.4202,2.0226],[8.4852,1.6668],[8.5703,1.0617],[8.5949,0.6718],[8.5905,0.4754],[8.6027,0.4761],[8.6693,0.4688],[8.6859,0.4633],[8.6976,0.452],[8.7063,0.4378],[8.7112,0.4202],[8.7126,0.4049],[8.6965,0.215],[8.5149,0.0567],[8.6691,-0.1354],[8.4801,-0.5944],[8.4719,-0.6249],[8.4671,-0.6598],[8.4616,-0.7796],[8.4638,-0.8685],[8.4786,-0.932],[8.5202,-0.9917],[8.5937,-1.0728],[8.6431,-1.1654],[8.6877,-1.3354],[8.6951,-1.373],[8.6981,-1.5581],[8.6889,-1.6412],[8.6803,-1.6593],[8.6661,-1.6956],[8.6183,-1.7935],[8.6011,-1.8229],[8.6606,-1.9436],[8.7654,-2.2226],[8.7656,-2.3672],[8.7971,-2.3816],[8.7858,-2.4419],[8.7679,-2.5195],[8.7369,-2.6102],[8.6976,-2.9376],[8.6992,-3.0278],[8.6603,-3.1571],[8.6714,-3.2652],[8.7091,-3.5336],[8.7116,-3.6453],[8.7084,-3.6933],[8.6698,-3.7596],[8.6438,-3.8263],[8.5192,-3.8701],[8.41,-3.949],[8.3751,-4.0025],[8.1984,-3.8639],[8.0214,-4.1308],[7.9168,-4.278],[7.8886,-4.2619],[7.8832,-4.2647],[7.7267,-4.5004],[7.348,-4.3041],[7.3054,-4.3866],[7.1831,-4.3238],[7.0939,-4.4909],[6.8014,-4.5771],[6.7722,-4.6231],[6.7635,-4.6306],[6.7474,-4.6359],[6.6575,-4.6441],[6.5991,-4.6448],[6.5292,-4.6342],[6.4424,-4.6171],[6.2642,-4.5665],[6.1004,-4.5798],[6.05,-4.6384],[5.9532,-4.7051],[5.9027,-4.6989],[5.7404,-4.6598],[5.6761,-4.6883],[4.8716,-4.5526],[4.699,-4.3965],[4.5634,-4.3324],[4.4909,-4.2862],[3.8341,-3.9623],[3.7134,-3.8668],[3.3406,-3.4702],[3.2544,-3.4196],[3.1305,-3.4215],[2.8246,-3.4874],[2.7526,-3.489],[2.6354,-3.4673],[2.5764,-3.4395],[2.4789,-3.3645],[2.2185,-3.0154],[2.1681,-2.9721],[2.0263,-2.9117],[1.9047,-2.8399],[1.7539,-2.6856],[1.5866,-2.5487],[1.5002,-2.4981],[1.4193,-2.4676],[1.0824,-2.3849],[0.59,-2.2335],[0.482,-2.2439],[0.4326,-2.2184],[0.2926,-2.2856],[-0.1106,-2.396],[-0.2009,-2.405],[-0.2722,-2.3906],[-0.3565,-2.3383],[-0.5652,-2.1203],[-0.7183,-1.9817],[-0.9019,-1.8523],[-1.137,-1.7071],[-1.588,-1.5132],[-1.7581,-1.3847],[-1.6891,-1.1254],[-1.7188,-0.8714],[-1.7172,-0.7639],[-1.7501,-0.6114],[-1.7287,-0.4447],[-1.7418,-0.297],[-1.6963,-0.0056],[-1.7204,0.051],[-1.8762,0.295],[-1.8974,0.3795],[-1.9047,0.4633],[-1.8965,0.5307],[-1.7932,0.8163],[-1.8073,0.8705],[-1.8356,0.9251],[-1.8142,1.0281],[-1.7595,1.1119],[-1.7468,1.1953],[-1.7795,1.2959],[-1.8326,1.3772],[-1.8549,1.4915],[-1.8841,1.5145],[-1.9164,1.5654],[-1.9429,1.6737],[-1.9284,1.7449],[-1.8933,1.8435],[-1.887,1.9726],[-1.9004,2.1125],[-1.9601,2.3038],[-2.0937,2.3699],[-2.2189,2.4517],[-2.3582,2.524],[-2.5456,2.5958],[-2.7198,2.6453],[-2.8253,2.6568],[-3.0177,2.6332],[-3.1748,2.5945],[-3.8063,2.5215],[-3.9819,2.4676],[-4.0853,2.5408],[-4.1211,2.5458],[-4.1717,2.5235],[-4.3521,2.386],[-4.4303,2.3747],[-4.5981,2.436],[-4.7982,2.4864],[-4.9653,2.5038],[-5.1173,2.4968],[-5.2387,2.3276],[-5.3039,2.3495],[-5.385,2.6212],[-5.4211,2.6761],[-5.4899,2.7064],[-5.7055,2.7691],[-5.7776,2.642],[-5.8509,2.4214],[-5.9004,2.3095],[-6.0151,2.4048],[-6.0943,2.4873],[-6.1298,2.5023],[-6.346,2.3062],[-7.3838,2.5695],[-7.5208,2.594],[-7.6228,2.5894],[-7.7079,2.5503],[-7.7624,2.5361],[-8.0673,2.6179],[-8.3905,2.6865],[-8.6194,2.7139],[-8.5999,2.8786],[-8.5509,3.1478],[-8.5478,3.3013],[-8.7213,3.309],[-8.7509,3.5608],[-8.7573,3.7304],[-8.7971,4.0366]];
+
+try{
+ const renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});
+ const DPR_MAX=Math.min(devicePixelRatio,2);
+ let dpr=DPR_MAX;
+ renderer.setPixelRatio(dpr);renderer.setClearColor(FONDOS.marfil,1);
+ renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1;
+
+ const escena=new THREE.Scene();escena.background=new THREE.Color(FONDOS.marfil);
+ escena.add(new THREE.HemisphereLight(0xffffff,0x88908a,2.4));
+ const sol=new THREE.DirectionalLight(0xffffff,2.3);sol.position.set(8,20,12);escena.add(sol);
+
+ const camara=new THREE.PerspectiveCamera(38,1,.01,400); // el GLB exportado desde Blender es Y-up
+ const controles=new OrbitControls(camara,canvas);
+ // navegación libre: giro completo (también por debajo), zoom hacia el cursor, inercia suave
+ controles.enableDamping=true;controles.dampingFactor=.06;controles.rotateSpeed=.6;
+ controles.zoomSpeed=1.1;controles.panSpeed=.9;controles.screenSpacePanning=false;
+ controles.zoomToCursor=true;controles.maxPolarAngle=Math.PI;controles.minDistance=.03;
+ controles.autoRotateSpeed=1.1;
+ controles.mouseButtons={LEFT:THREE.MOUSE.ROTATE,MIDDLE:THREE.MOUSE.DOLLY,RIGHT:THREE.MOUSE.PAN};
+ controles.touches={ONE:THREE.TOUCH.ROTATE,TWO:THREE.TOUCH.DOLLY_PAN};
+
+ const draco=new DRACOLoader().setDecoderPath('./vendor/draco/');
+ const cargador=new GLTFLoader().setDRACOLoader(draco);
+ const raiz=new THREE.Group();escena.add(raiz);
+ window.__raiz=raiz;window.__THREE__=THREE;window.__camara=camara;window.__volar=v=>{};
+ let caja,cenitalPos,generalPos,generalTarget;
+
+ function ajustar(){const r=canvas.getBoundingClientRect(),w=Math.max(1,r.width|0),h=Math.max(1,r.height|0);renderer.setSize(w,h,false);camara.aspect=w/h;camara.updateProjectionMatrix()}
+ new ResizeObserver(ajustar).observe(canvas);ajustar();
+
+ // ---- vuelo suave de cámara ----
+ const vuelo={activo:false,t:0,dur:.9,deP:new THREE.Vector3(),aP:new THREE.Vector3(),deT:new THREE.Vector3(),aT:new THREE.Vector3()};
+ function volar(aP,aT,dur=.9){vuelo.deP.copy(camara.position);vuelo.aP.copy(aP);vuelo.deT.copy(controles.target);vuelo.aT.copy(aT);vuelo.t=0;vuelo.dur=dur;vuelo.activo=true}
+ window.__volar=volar;
+ const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+
+ let grupoBarrios=null;
+ // ---- render sólo cuando hace falta, con adaptación de resolución ----
+ let necesitaRender=true,ultT=performance.now(),acumFps=0,nFps=0;
+ controles.addEventListener('change',()=>necesitaRender=true);
+ canvas.addEventListener('pointermove',()=>necesitaRender=true);
+ function bajarDPR(){if(dpr>1){dpr=Math.max(1,dpr-.25);renderer.setPixelRatio(dpr);necesitaRender=true}}
+
+ (function animar(t){
+  requestAnimationFrame(animar);
+  const dt=t-ultT;ultT=t;acumFps+=dt;nFps++;
+  if(acumFps>=1000){const f=Math.round(1000/(acumFps/nFps));fpsBox.hidden=false;fpsBox.textContent=f+' fps';if(f<42&&!controles.autoRotate)bajarDPR();acumFps=0;nFps=0}
+  if(vuelo.activo){vuelo.t+=dt/(vuelo.dur*1000);const k=ease(Math.min(1,vuelo.t));camara.position.lerpVectors(vuelo.deP,vuelo.aP,k);controles.target.lerpVectors(vuelo.deT,vuelo.aT,k);if(vuelo.t>=1)vuelo.activo=false;necesitaRender=true}
+  const moviendo=controles.update();
+  if(moviendo)necesitaRender=true;
+  if(grupoBarrios&&grupoBarrios.visible){for(const sp of grupoBarrios.children){const d=camara.position.distanceTo(sp.position),k=Math.max(.004,d*.0125);sp.scale.set(k*sp.userData.w/128,k,1)}}
+  if(necesitaRender){renderer.render(escena,camara);necesitaRender=vuelo.activo||controles.autoRotate}
+ })(performance.now());
+
+ // ---- paneo con teclado (flechas / WASD) ----
+ const teclas={};
+ addEventListener('keydown',e=>{teclas[e.key.toLowerCase()]=1;if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase())&&document.activeElement!==buscar)e.preventDefault()});
+ addEventListener('keyup',e=>{teclas[e.key.toLowerCase()]=0});
+ function paneoTeclado(){
+  if(document.activeElement===buscar)return;
+  const v=new THREE.Vector3();
+  if(teclas['arrowup']||teclas['w'])v.z-=1;
+  if(teclas['arrowdown']||teclas['s'])v.z+=1;
+  if(teclas['arrowleft']||teclas['a'])v.x-=1;
+  if(teclas['arrowright']||teclas['d'])v.x+=1;
+  if(v.lengthSq()===0)return;
+  const paso=camara.position.distanceTo(controles.target)*.02+.002;
+  const fwd=new THREE.Vector3();camara.getWorldDirection(fwd);fwd.y=0;fwd.normalize();
+  const der=new THREE.Vector3().crossVectors(fwd,new THREE.Vector3(0,1,0)).negate();
+  const mov=new THREE.Vector3().addScaledVector(fwd,-v.z*paso).addScaledVector(der,-v.x*paso);
+  camara.position.add(mov);controles.target.add(mov);necesitaRender=true;
+ }
+ setInterval(paneoTeclado,16);
+
+ // ---- capas ----
+ const capas={edificios:[],calles:[],parques:[],arboles:[],alcorques:[]};
+ const matsVistas=new Set(); // materiales reales del modelo → nº de capas verdadero
+ function capaDe(n){
+  n=norm(n);
+  if(n.includes('street'))return'calles';
+  if(n.includes('parks'))return'parques';
+  if(n.includes('tree pits'))return'alcorques';
+  if(n.includes('tree positions'))return'arboles';
+  if(n.includes('catastro footprints')||n.includes('roof plates')||n.includes('windows'))return'edificios';
+  return null}
+ document.querySelectorAll('[data-capa]').forEach(ch=>{
+  ch.addEventListener('change',()=>{
+   capas[ch.dataset.capa].forEach(o=>o.visible=ch.checked);
+   necesitaRender=true;
+  });
+ });
+
+ // ---- mejora de materiales: calles visibles y parques vivos ----
+ function mejorarMateriales(o){
+  const m=o.material;if(!m)return;
+  const n=norm(m.name);
+  if(n.startsWith('osm street network')){
+   m.color.setHex(0x3d423e);m.roughness=.92;m.needsUpdate=true;
+  }else if(n.startsWith('main osm streets')){
+   m.color.setHex(0x23282a);m.roughness=.9;m.needsUpdate=true;
+  }else if(n.startsWith('official parks and gardens')){
+   m.color.setHex(0x1e6b2e);m.emissive=new THREE.Color(0x0d3a17);m.emissiveIntensity=.4;m.needsUpdate=true;
+  }
+ }
+
+ // ---- etiquetas de barrios (sprites) ----
+ function hacerSprite(txt){
+  const c=document.createElement('canvas');c.width=512;c.height=128;
+  const g=c.getContext('2d');
+  let fs=52;g.font='600 '+fs+'px system-ui,sans-serif';
+  let tw=g.measureText(txt).width;
+  if(tw>430){fs=Math.max(22,Math.floor(fs*430/tw));g.font='600 '+fs+'px system-ui,sans-serif';tw=g.measureText(txt).width;}
+  const w=tw+56;
+  g.fillStyle='rgba(255,255,255,.88)';
+  g.strokeStyle='rgba(36,37,34,.35)';g.lineWidth=3;
+  const x=(512-w)/2,y=18,h=92,r=26;
+  g.beginPath();
+  if(g.roundRect)g.roundRect(x,y,w,h,r);else g.rect(x,y,w,h);
+  g.fill();g.stroke();
+  g.fillStyle='#242522';g.textAlign='center';g.textBaseline='middle';
+  g.fillText(txt,256,y+h/2+2);
+  const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=4;
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false,depthWrite:false}));
+  sp.scale.set(.00028*w,.00028*128,1);
+  sp.userData.w=w;
+  sp.renderOrder=999;
+  return sp;
+ }
+ function construirBarrios(){
+  if(grupoBarrios)return;
+  grupoBarrios=new THREE.Group();
+  for(const b of BARRIOS){
+   const sp=hacerSprite(b[0]);
+   sp.position.set(b[1],.55,b[2]);
+   grupoBarrios.add(sp);
+  }
+  escena.add(grupoBarrios);
+ }
+
+ // ---- ortofoto ----
+ let ortoMesh=null,ortoCargando=false;
+ function cargarOrtofoto(){
+  if(ortoMesh||ortoCargando)return Promise.resolve(!!ortoMesh);
+  ortoCargando=true;
+  return new Promise(res=>{
+   new THREE.TextureLoader().setCrossOrigin('anonymous').load(ORTO.url,t=>{
+    // ortofoto recortada EXACTAMENTE al perímetro municipal: nada de entorno
+    const shape=new THREE.Shape(FRONTERA.map(p=>new THREE.Vector2(p[0],p[1])));
+    const geo=new THREE.ShapeGeometry(shape);
+    const pos=geo.attributes.position,uv=geo.attributes.uv;
+    for(let i=0;i<pos.count;i++){
+     uv.setXY(i,(pos.getX(i)-ORTO.xmin)/(ORTO.xmax-ORTO.xmin),(pos.getY(i)+5.102)/(5.276+5.102));
+    }
+    geo.rotateX(-Math.PI/2);
+    ortoMesh=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({map:t,side:THREE.DoubleSide}));
+    ortoMesh.position.y=-.004;
+    escena.add(ortoMesh);
+    ortoCargando=false;
+    window.__ortoLista=true;
+    if(window.__SCENE_READY__)estado.textContent='Modelo cargado · '+matsVistas.size+' capas · ortofoto PNOA lista';
+    res(true);
+   },undefined,()=>{ortoCargando=false;estado.textContent='No se pudo cargar la ortofoto (sin conexión o bloqueo)';res(false)});
+  });
+ }
+
+ // ---- fondo ----
+ const selFondo=document.getElementById('fondo');
+ selFondo.addEventListener('change',async()=>{
+  const v=selFondo.value;
+  if(v==='ortofoto'){
+   estado.textContent='Cargando ortofoto PNOA…';
+   const ok=await cargarOrtofoto();
+   if(!ok){selFondo.value='marfil';escena.background.setHex(FONDOS.marfil);renderer.setClearColor(FONDOS.marfil,1);return}
+   escena.background.setHex(0x2b6777);renderer.setClearColor(0x2b6777,1);
+   atrib.style.display='block';
+   // el terreno base taparía la foto: lo ocultamos y desmarcamos (solo si estaba activo)
+   const chkT=document.getElementById('terreno');
+   if(chkT.checked){window.__terrenoAuto=true;chkT.checked=false;raiz.traverse(o=>{if(o.userData.base)o.visible=false});}
+  }else{
+   if(window.__terrenoAuto){window.__terrenoAuto=false;const t2=document.getElementById('terreno');t2.checked=true;raiz.traverse(o=>{if(o.userData.base)o.visible=true});}
+   if(ortoMesh)ortoMesh.visible=false;
+   atrib.style.display='none';
+   escena.background.setHex(FONDOS[v]);renderer.setClearColor(FONDOS[v],1);
+  }
+  if(ortoMesh)ortoMesh.visible=(v==='ortofoto');
+  necesitaRender=true;
+ });
+
+ // ---- carga del modelo ----
+ cargador.load('./Mairena_Elefante_Real.glb',g=>{
+  raiz.add(g.scene);
+  let cajaCiudad=null; // encuadre por el casco urbano (inventario): calles y fincas rurales no descentran la vista
+  g.scene.traverse(o=>{
+   if(!o.isMesh)return;
+   o.userData.cat=catDe(o.material?.name);
+   if(o.material&&o.material.name)matsVistas.add(norm(o.material.name));
+   if(!o.geometry.boundsTree)o.geometry.computeBoundsTree();
+   mejorarMateriales(o);
+   const nn=norm(o.name+' '+norm(o.parent?.name));
+   if(/terrain|boundary|solid base|limestone/.test(nn)){(o.userData.base=o).visible=false;return}
+   const cp=capaDe(o.name);
+   if(cp)capas[cp].push(o);
+   if(o.visible&&(cp==='parques'||cp==='alcorques'||cp==='arboles')){(cajaCiudad=cajaCiudad||new THREE.Box3()).expandByObject(o);}
+  });
+  caja=cajaCiudad||new THREE.Box3().setFromObject(g.scene);
+  const c=caja.getCenter(new THREE.Vector3()),s=caja.getSize(new THREE.Vector3()),r=Math.max(s.x,s.y,s.z);
+  generalTarget=c.clone();
+  generalPos=new THREE.Vector3(c.x+r*.22,c.y+r*.8,c.z+r*.75);
+  if(camara.aspect<1){const k=1.75;generalPos.set(c.x+(generalPos.x-c.x)*k,c.y+(generalPos.y-c.y)*k,c.z+(generalPos.z-c.z)*k)}
+  cenitalPos=new THREE.Vector3(c.x,c.y+r*1.05,c.z);
+  camara.position.copy(generalPos);controles.target.copy(c);controles.maxDistance=r*2.2;controles.update();
+  construirBarrios();
+  barra.parentElement.hidden=true;
+  estado.textContent='Modelo cargado · '+matsVistas.size+' capas'+(window.__ortoLista?' · ortofoto PNOA lista':'');
+  window.__SCENE_READY__=true;necesitaRender=true;
+ },x=>{if(x.total)barra.style.width=Math.round(x.loaded/x.total*100)+'%'},e=>{estado.textContent='Error al cargar Mairena_Elefante_Real.glb';console.error(e)});
+
+ // ---- barrios: toggle ----
+ document.getElementById('barrios-chk').addEventListener('change',e=>{
+  construirBarrios();
+  grupoBarrios.visible=e.target.checked;
+  necesitaRender=true;
+ });
+
+ // ---- ir a un lugar ----
+ function irAlLugar(){
+  const q=buscar.value.trim();
+  if(!q)return;
+  const l=LUGARES.find(l=>l.n===q)||LUGARES.find(l=>l.n.toLowerCase().includes(q.toLowerCase()));
+  if(!l){estado.textContent='Lugar no encontrado: '+q;return}
+  const t=new THREE.Vector3(l.x,.05,l.z);
+  const d=2.6;
+  const p=new THREE.Vector3(l.x+d*.55,d*.75,l.z+d*.5);
+  volar(p,t,1.1);
+ }
+ document.getElementById('ir').addEventListener('click',irAlLugar);
+ buscar.addEventListener('keydown',e=>{if(e.key==='Enter')irAlLugar()});
+
+ // ---- girar (turntable) ----
+ const btnGirar=document.getElementById('girar');
+ btnGirar.addEventListener('click',()=>{
+  controles.autoRotate=!controles.autoRotate;
+  btnGirar.classList.toggle('activo',controles.autoRotate);
+  btnGirar.setAttribute('aria-pressed',controles.autoRotate);
+  necesitaRender=true;
+ });
+
+ // ---- capturar PNG ----
+ document.getElementById('png').addEventListener('click',()=>{
+  renderer.render(escena,camara);
+  canvas.toBlob(b=>{
+   const a=document.createElement('a');
+   a.href=URL.createObjectURL(b);a.download='mairena-3d.png';a.click();
+   setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+  },'image/png');
+ });
+
+ // ---- panel plegable ----
+ const hud=document.getElementById('hud'),btnPlegar=document.getElementById('plegar');
+ function setPlegado(m){hud.classList.toggle('min',m);btnPlegar.textContent=m?'+':'–'}
+ btnPlegar.addEventListener('click',()=>setPlegado(!hud.classList.contains('min')));
+ if(innerWidth<520)setPlegado(true);
+
+ // ---- etiquetas GLB ----
+ let etiquetasObj=null,cargandoEtq=false;
+ document.getElementById('etiquetas').addEventListener('change',async e=>{
+  try{
+   if(e.target.checked){
+    if(!etiquetasObj&&!cargandoEtq){cargandoEtq=true;etiquetasObj=(await cargador.loadAsync('./Mairena_Etiquetas.glb')).scene}
+    if(etiquetasObj&&!etiquetasObj.parent)raiz.add(etiquetasObj);
+   }else if(etiquetasObj)raiz.remove(etiquetasObj);
+   necesitaRender=true;
+  }catch(err){estado.textContent='No se pudieron cargar las etiquetas';console.error(err)}
+ });
+
+ // ---- terreno/base ----
+ document.getElementById('terreno').addEventListener('change',e=>{
+  const on=e.target.checked;
+  if(on&&selFondo.value==='ortofoto'){e.target.checked=false;return} // la ortofoto queda tapada
+  raiz.traverse(o=>{if(o.userData.base)o.visible=on});
+  necesitaRender=true;
+ });
+
+ // ---- ratón: hover + clic para acercar ----
+ const rayo=new THREE.Raycaster();rayo.firstHitOnly=true;
+ const raton=new THREE.Vector2();let hover=null,downPos=null,downT=0;
+ const matResalte=new THREE.MeshBasicMaterial({color:0x3a3ad6,transparent:true,opacity:.35,depthTest:true});
+ function pick(ev){
+  const r=canvas.getBoundingClientRect();
+  raton.set(((ev.clientX-r.left)/r.width)*2-1,-((ev.clientY-r.top)/r.height)*2+1);
+  rayo.setFromCamera(raton,camara);
+  const hits=rayo.intersectObjects(raiz.children,true);
+  for(const h of hits){if(h.object.visible&&h.object.isMesh&&h.distance>1e-4)return h}
+  return null;
+ }
+ let ultRayo=0;
+ canvas.addEventListener('pointermove',ev=>{
+  if(!window.__SCENE_READY__)return;
+  const ahora=performance.now();
+  if(ahora-ultRayo<70)return;
+  ultRayo=ahora;
+  const h=pick(ev);
+  const obj=h?h.object:null;
+  if(hover&&hover!==obj){hover.material=hover.userData.matOrig;hover=null;tip.style.display='none'}
+  if(obj&&hover!==obj){
+   if(!obj.userData.matOrig)obj.userData.matOrig=obj.material;
+   if(obj.userData.matOrig.emissive){obj.userData.matOrigSaved=obj.userData.matOrig.clone();obj.material=obj.userData.matOrigSaved;obj.material.emissive.setHex(0x3a3ad6);obj.material.emissiveIntensity=.6}
+   else{obj.material=matResalte}
+   hover=obj;
+  }
+  if(h){tip.textContent=obj.userData.cat;tip.style.display='block';tip.style.left=ev.clientX+'px';tip.style.top=ev.clientY+'px';canvas.style.cursor='pointer'}
+  else canvas.style.cursor='';
+  necesitaRender=true;
+ });
+ canvas.addEventListener('pointerdown',ev=>{downPos=[ev.clientX,ev.clientY];downT=performance.now()});
+ canvas.addEventListener('pointerup',ev=>{
+  if(!downPos||!window.__SCENE_READY__)return;
+  const dx=ev.clientX-downPos[0],dy=ev.clientY-downPos[1];
+  const esClic=Math.hypot(dx,dy)<6&&performance.now()-downT<400;
+  downPos=null;
+  if(!esClic)return;
+  const h=pick(ev);if(!h)return;
+  const d=camara.position.distanceTo(h.point);
+  const nuevoTarget=h.point.clone();
+  const dir=camara.position.clone().sub(controles.target).normalize();
+  const nuevoPos=nuevoTarget.clone().add(dir.multiplyScalar(Math.max(.12,d*.35)));
+  volar(nuevoPos,nuevoTarget,.8);
+ });
+
+ // ---- botones ----
+ document.getElementById('reiniciar').addEventListener('click',()=>volar(generalPos,generalTarget,1));
+ document.getElementById('cenital').addEventListener('click',()=>volar(cenitalPos,generalTarget,1));
+ canvas.addEventListener('dblclick',()=>volar(generalPos,generalTarget,1));
+}catch(err){document.getElementById('fallo').hidden=false;console.error(err)}
+</script>
+</body>
 </html>
