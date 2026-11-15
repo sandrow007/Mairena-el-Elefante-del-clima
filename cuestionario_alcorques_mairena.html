@@ -534,7 +534,57 @@ function updateUI(){
   document.getElementById('btnPrev').style.display = cur > 1 ? '' : 'none';
   document.getElementById('btnNext').textContent = cur === TOTAL ? 'Enviar mi voto' : 'Siguiente';
 }
+/* ============================================================
+   ENVIO A GOOGLE FORMS
+   - Cada voto sale hacia el formulario de Google de Sandro.
+   - Si no hay internet al enviar, el voto se guarda en el
+     aparato y se reenvia solo la proxima vez que se abra.
+   - Los codigos entry.* son los de cada pregunta del form.
+   ============================================================ */
+const GF={
+  url:'https://docs.google.com/forms/d/e/1FAIpQLSey2lFIBBbeogU2BOBB-jnv1L0dNqUmrZiNgzYJx0DrQCfAew/formResponse',
+  vecino:'entry.1847438275', zona:'entry.689341568', prio:'entry.577489200',
+  arboles:'entry.1696750119', calle:'entry.412027579', comentarios:'entry.1936014706',
+  opinion:'entry.421837396', sugerencia:'entry.1607186018'
+};
+const COLA='manolit∞_votos_pendientes';
+function datosVoto(){
+  return [
+    [GF.vecino,st.mairena],[GF.zona,st.zona],[GF.prio,st.prio],
+    ...st.arboles.map(a=>[GF.arboles,a]),
+    [GF.calle,st.calle],[GF.comentarios,st.comment],
+    [GF.opinion,st.proy],[GF.sugerencia,st.proysugg]
+  ];
+}
+function mandar(pares){
+  const fd=new FormData();
+  pares.forEach(([k,v])=>fd.append(k,v));
+  return fetch(GF.url,{method:'POST',mode:'no-cors',body:fd});
+}
+function enviarAGoogle(){
+  const pares=datosVoto();
+  return mandar(pares).catch(()=>{
+    try{
+      const q=JSON.parse(localStorage.getItem(COLA)||'[]');
+      q.push(pares);
+      localStorage.setItem(COLA,JSON.stringify(q));
+    }catch(e){}
+  });
+}
+(function reintentarPendientes(){
+  try{
+    const q=JSON.parse(localStorage.getItem(COLA)||'[]');
+    if(!q.length)return;
+    (async()=>{
+      const quedan=[];
+      for(const p of q){ try{ await mandar(p); }catch(e){ quedan.push(p); } }
+      localStorage.setItem(COLA,JSON.stringify(quedan));
+    })();
+  }catch(e){}
+})();
+
 function finish(){
+  enviarAGoogle();
   document.getElementById('navrow').style.display = 'none';
   document.querySelector('.prog-wrap').style.display = 'none';
   document.getElementById('thanks').classList.add('on');
