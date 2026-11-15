@@ -175,7 +175,7 @@ try{
   if(vuelo.activo){vuelo.t+=dt/(vuelo.dur*1000);const k=ease(Math.min(1,vuelo.t));camara.position.lerpVectors(vuelo.deP,vuelo.aP,k);controles.target.lerpVectors(vuelo.deT,vuelo.aT,k);if(vuelo.t>=1)vuelo.activo=false;necesitaRender=true}
   const moviendo=controles.update();
   if(moviendo)necesitaRender=true;
-  if(grupoBarrios&&grupoBarrios.visible){for(const sp of grupoBarrios.children){const d=camara.position.distanceTo(sp.position),k=Math.max(.004,d*.0125);sp.scale.set(k*sp.userData.w/128,k,1)}}
+  if(grupoBarrios&&grupoBarrios.visible){for(const sp of grupoBarrios.children){const d=camara.position.distanceTo(sp.position),k=Math.max(.009,d*.02);sp.scale.set(k*sp.userData.w/128,k,1)}}
   if(necesitaRender){renderer.render(escena,camara);necesitaRender=vuelo.activo||controles.autoRotate}
  })(performance.now());
 
@@ -258,7 +258,7 @@ try{
   grupoBarrios=new THREE.Group();
   for(const b of BARRIOS){
    const sp=hacerSprite(b[0]);
-   sp.position.set(b[1],.02,b[2]);
+   sp.position.set(b[1],.14,b[2]);
    grupoBarrios.add(sp);
   }
   escena.add(grupoBarrios);
