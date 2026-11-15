@@ -301,22 +301,58 @@ try{
 
  // ---- ortofoto ----
  let ortoMesh=null,ortoCargando=false;
+ // polígono municipal calibrado a la caja del modelo (coordenadas de la forma: x, y=-z)
+ function fronteraCalibrada(){
+  const fx=FRONTERA.map(p=>p[0]),fy=FRONTERA.map(p=>p[1]);
+  const fxmin=Math.min.apply(null,fx),fxmax=Math.max.apply(null,fx);
+  const fymin=Math.min.apply(null,fy),fymax=Math.max.apply(null,fy);
+  const bx0=caja?caja.min.x:fxmin,bx1=caja?caja.max.x:fxmax;
+  const by0=caja?-caja.max.z:fymin,by1=caja?-caja.min.z:fymax;
+  return FRONTERA.map(p=>new THREE.Vector2(
+    bx0+(p[0]-fxmin)/(fxmax-fxmin)*(bx1-bx0),
+    by0+(p[1]-fymin)/(fymax-fymin)*(by1-by0)));
+ }
+ // nada puede salir del término municipal: se descartan los triángulos con algún vértice fuera
+ function puntoDentro(x,z,poly){
+  let dentro=false;
+  for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+   const xi=poly[i][0],zi=poly[i][1],xj=poly[j][0],zj=poly[j][1];
+   if(((zi>z)!==(zj>z))&&(x<(xj-xi)*(z-zi)/(zj-zi)+xi))dentro=!dentro;
+  }
+  return dentro;
+ }
+ function recortarMesh(o,poly){
+  const g=o.geometry,pos=g.attributes.position;
+  if(!pos)return;
+  o.updateWorldMatrix(true,false);
+  const m=o.matrixWorld,v=new THREE.Vector3();
+  const dentro=new Uint8Array(pos.count),calc=new Uint8Array(pos.count);
+  const idx=g.index,n=idx?idx.count:pos.count;
+  const keep=[];
+  function esDentro(i){
+   if(!calc[i]){v.fromBufferAttribute(pos,i).applyMatrix4(m);dentro[i]=puntoDentro(v.x,v.z,poly)?1:0;calc[i]=1;}
+   return dentro[i];
+  }
+  for(let t=0;t+2<n;t+=3){
+   const a=idx?idx.getX(t):t,b=idx?idx.getX(t+1):t+1,c=idx?idx.getX(t+2):t+2;
+   if(esDentro(a)&&esDentro(b)&&esDentro(c))keep.push(a,b,c);
+  }
+  if(keep.length===n)return;
+  g.setIndex(keep);
+  if(g.boundsTree)g.disposeBoundsTree();
+  if(keep.length)g.computeBoundsTree();
+  g.computeBoundingBox();g.computeBoundingSphere();
+  if(!keep.length)o.visible=false;
+ }
  function cargarOrtofoto(){
   if(ortoMesh||ortoCargando)return Promise.resolve(!!ortoMesh);
   ortoCargando=true;
   return new Promise(res=>{
    new THREE.TextureLoader().setCrossOrigin('anonymous').load(ORTO.url,t=>{
     // ortofoto recortada EXACTAMENTE al perímetro municipal: nada de entorno
-    // calibración automática: el polígono se escala a la caja real del modelo cargado
-    const fx=FRONTERA.map(p=>p[0]),fy=FRONTERA.map(p=>p[1]);
-    const fxmin=Math.min.apply(null,fx),fxmax=Math.max.apply(null,fx);
-    const fymin=Math.min.apply(null,fy),fymax=Math.max.apply(null,fy);
-    const bx0=caja?caja.min.x:fxmin,bx1=caja?caja.max.x:fxmax;
-    // tras geo.rotateX(-PI/2) el mundo z = -y de la forma; el norte (z mín) es y máx
-    const by0=caja?-caja.max.z:fymin,by1=caja?-caja.min.z:fymax;
-    const pts=FRONTERA.map(p=>new THREE.Vector2(
-      bx0+(p[0]-fxmin)/(fxmax-fxmin)*(bx1-bx0),
-      by0+(p[1]-fymin)/(fymax-fymin)*(by1-by0)));
+    const pts=fronteraCalibrada();
+    const bx0=caja?caja.min.x:Math.min.apply(null,pts.map(p=>p.x)),bx1=caja?caja.max.x:Math.max.apply(null,pts.map(p=>p.x));
+    const by0=caja?-caja.max.z:Math.min.apply(null,pts.map(p=>p.y)),by1=caja?-caja.min.z:Math.max.apply(null,pts.map(p=>p.y));
     const shape=new THREE.Shape(pts);
     const geo=new THREE.ShapeGeometry(shape);
     const pos=geo.attributes.position,uv=geo.attributes.uv;
@@ -375,6 +411,9 @@ try{
    if(cp)capas[cp].push(o);
   });
   caja=new THREE.Box3().setFromObject(g.scene);
+  // recorte estricto al término municipal: nada se dibuja fuera de la ortofoto
+  const poly=fronteraCalibrada().map(p=>[p.x,-p.y]);
+  Object.keys(capas).forEach(k=>capas[k].forEach(o=>recortarMesh(o,poly)));
   const c=caja.getCenter(new THREE.Vector3()),s=caja.getSize(new THREE.Vector3()),r=Math.max(s.x,s.y,s.z);
   generalTarget=c.clone();
   generalPos=new THREE.Vector3(c.x+r*.22,c.y+r*.8,c.z+r*.75);
