@@ -13,6 +13,8 @@
 body{font:14px/1.4 system-ui,sans-serif;color:var(--ink);background:var(--paper);overflow:hidden}
 #visor{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
 #visor:active{cursor:grabbing}
+/* escritorio: el lienzo empieza donde acaba el panel → el modelo nunca queda debajo */
+@media(min-width:701px){body:not(.hud-min) #visor{margin-left:290px;width:calc(100% - 290px)}}
 #hud{position:fixed;top:15px;left:15px;z-index:10;background:rgba(255,255,255,.88);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:12px;padding:8px 10px;width:260px;max-width:calc(100vw - 30px);box-shadow:0 6px 24px rgba(0,0,0,.12)}
 h1{font:15px/1.2 Georgia,serif;margin:0 0 2px}
 .meta{color:var(--muted);font-size:11px;margin:0 0 6px}
@@ -189,10 +191,8 @@ try{
  function ajustar(){
   const r=canvas.getBoundingClientRect(),w=Math.max(1,r.width|0),h=Math.max(1,r.height|0);
   renderer.setSize(w,h,false);
-  // el modelo se encuadra en el hueco libre a la derecha del panel: nunca se solapan
-  const hudEl=document.getElementById('hud');
-  const panel=(innerWidth>700&&hudEl&&!hudEl.classList.contains('min'))?hudEl.getBoundingClientRect().width+28:0;
-  if(panel>0&&panel<w*.6)camara.setViewOffset(w,h,panel,0,w-panel,h);else camara.clearViewOffset();
+  // el lienzo empieza a la derecha del panel (vía CSS margin) → sin setViewOffset, sin culling
+  camara.clearViewOffset();
   camara.aspect=w/h;camara.updateProjectionMatrix();
  }
  new ResizeObserver(ajustar).observe(canvas);ajustar();
@@ -201,7 +201,8 @@ try{
  const vuelo={activo:false,t:0,dur:.9,deP:new THREE.Vector3(),aP:new THREE.Vector3(),deT:new THREE.Vector3(),aT:new THREE.Vector3()};
  function volar(aP,aT,dur=.9){vuelo.deP.copy(camara.position);vuelo.aP.copy(aP);vuelo.deT.copy(controles.target);vuelo.aT.copy(aT);vuelo.t=0;vuelo.dur=dur;vuelo.activo=true}
  // aleja el encuadre para que el modelo quepa en el hueco libre a la derecha del panel
- function panelPx(){const hudEl=document.getElementById('hud');return(innerWidth>700&&hudEl&&!hudEl.classList.contains('min'))?hudEl.getBoundingClientRect().width+28:0}
+ // el desplazamiento del panel lo gestiona el CSS margin; no hay offset JS en escritorio
+ function panelPx(){return 0}
  function factorPanel(){
   const w=canvas.clientWidth||innerWidth,p=panelPx();
   return(p>0&&p<w*.6)?Math.min(1.7,w/(w-p)):1;
@@ -458,7 +459,7 @@ try{
 
  // ---- panel plegable ----
  const hud=document.getElementById('hud'),btnPlegar=document.getElementById('plegar');
- function setPlegado(m){hud.classList.toggle('min',m);btnPlegar.textContent=m?'+':'–';ajustar()}
+ function setPlegado(m){hud.classList.toggle('min',m);document.body.classList.toggle('hud-min',m);btnPlegar.textContent=m?'+':'–';ajustar()}
  btnPlegar.addEventListener('click',()=>setPlegado(!hud.classList.contains('min')));
  if(innerWidth<520)setPlegado(true);
 
