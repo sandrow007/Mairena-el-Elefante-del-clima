@@ -1556,6 +1556,51 @@ svg.leaflet-image-layer.leaflet-interactive path {
 }
 </style>
 <script>/* Leaflet 1.9.4 BSD 2-Clause License. Full license text: https://opensource.org/license/bsd-2-clause/ */</script><base target="_blank">
+<style>
+/* =====================
+   ARREGLO MÓVIL 17-nov-2026 (Sandro): solo se AÑADEN reglas, no se toca nada
+   - chip Capas y zoom por debajo de la barra superior, sin choques
+   - aviso legal en una fila fina pegada abajo del todo
+   - cuestionario y leyenda justo encima de la barra legal
+   Escritorio y tablet intactos: todo va dentro de @media(max-width:640px)
+   ===================== */
+@media (max-width:640px){
+  .panel{top:var(--bajo-topbar, calc(104px + env(safe-area-inset-top))) !important;
+         right:calc(8px + env(safe-area-inset-right)) !important}
+  .leaflet-control-zoom{top:var(--bajo-topbar, calc(104px + env(safe-area-inset-top))) !important;
+         left:10px !important}
+  .panel[open]{max-height:calc(100dvh - 214px) !important}
+  .legal-bar{left:8px !important; right:8px !important; transform:none !important;
+         width:auto !important; max-width:none !important;
+         bottom:env(safe-area-inset-bottom, 0px) !important;
+         flex-wrap:nowrap !important; justify-content:center !important;
+         gap:0 14px !important; padding:6px 10px !important;
+         font-size:10px !important; white-space:nowrap !important;
+         border-radius:0 !important; border:none !important;
+         border-top:1px solid var(--edge) !important;
+         background:var(--panel) !important;
+         backdrop-filter:none !important; -webkit-backdrop-filter:none !important;
+         box-shadow:none !important}
+  .legal-bar a{padding:2px 0 !important; white-space:nowrap !important}
+  .btn-cuest-float,.legend{bottom:calc(31px + env(safe-area-inset-bottom, 0px)) !important}
+  .btn-cuest-float{right:calc(10px + env(safe-area-inset-right)) !important}
+  .legend{left:calc(10px + env(safe-area-inset-left)) !important}
+}
+</style>
+<script>
+/* mide la barra superior y coloca Capas y zoom justo debajo de ella */
+(function(){
+  function medir(){
+    var t=document.querySelector('.topbar'); if(!t) return;
+    var b=Math.ceil(t.getBoundingClientRect().bottom);
+    document.documentElement.style.setProperty('--bajo-topbar', (b+8)+'px');
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', medir); else medir();
+  addEventListener('load', medir);
+  addEventListener('resize', medir);
+  addEventListener('orientationchange', function(){ setTimeout(medir, 300); });
+})();
+</script>
 </head>
 <body><div id="map"></div><div class="map-bg" id="mapbg" aria-hidden="true"></div><header class="topbar"><span class="brand" aria-hidden="true"></span><span>Mairena del Aljarafe</span><button id="lang" class="theme-btn lang-btn" type="button" aria-label="Cambiar idioma / Change language">EN</button><a id="btn3d" class="cat-btn btn-3d" href="./mairena-3d/index.html" target="_blank" rel="noopener" title="Abrir el visor 3D de Mairena en una pestaña nueva" data-i18n-title="btn3d_title"><span class="cat-dot"></span>3D</a></header><details class="panel" open><summary><span data-i18n="layers">Capas</span> - <span id="zoomReadout" data-i18n="viewAll">vista completa</span></summary><label><input type="checkbox" data-layer="gaps" checked><span data-i18n="lbl_gaps"> Huecos de edificios</span></label><label><input type="checkbox" id="ortho" checked><span data-i18n="lbl_ortho"> Ortofoto PNOA (sat&eacute;lite)</span></label><label><input type="checkbox" data-layer="gaps3d"><span data-i18n="lbl_gaps3d"> Huecos de altura</span></label><label><input type="checkbox" data-layer="gaptrees"><span data-i18n="lbl_gaptrees"> Zonas con pocos &aacute;rboles</span></label><label><input type="checkbox" data-layer="buildings3d"><span data-i18n="lbl_b3"> Edificios con altura</span></label><label><input type="checkbox" data-layer="buildings2d" checked><span data-i18n="lbl_b2"> Edificios sin altura</span></label><label><input type="checkbox" data-layer="trees"><span data-i18n="lbl_trees"> &Aacute;rboles (zoom cercano)</span></label><label><input type="checkbox" data-layer="oficial"><span data-i18n="lbl_oficial"> Arbolado oficial Ayto.</span></label><label><input type="checkbox" data-layer="alcorques"><span data-i18n="lbl_alcorques"> Alcorques vac&iacute;os</span></label><label><input type="checkbox" data-layer="parques"><span data-i18n="lbl_parques"> Parques y jardines</span></label><label><input type="checkbox" data-layer="labels" checked><span data-i18n="lbl_labels"> Nombres de barrios</span></label><label><input type="checkbox" id="streets"><span data-i18n="lbl_streets"> Calles OSM</span></label><label class="cat-layer"><input type="checkbox" id="catbtn" data-layer="catbuildings"><span data-i18n="catbtn">Catastro</span></label><button id="print" data-i18n="btn_print">Imprimir</button><button id="capture" data-i18n="btn_capture">Capturar</button><div class="share-wrap"><button id="sharebtn" data-i18n="btn_share">Compartir</button><div id="sharemenu" class="share-menu" hidden>
 <a class="share-item" data-share="whatsapp" href="#"><span>&#128172;</span><span data-i18n="sh_whatsapp">WhatsApp</span></a>
