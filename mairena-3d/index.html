@@ -264,11 +264,11 @@ try{
  function capaDe(n){
   n=norm(n);
   if(n.includes('street'))return'calles';
-  if(n.includes('parks'))return'parques';
-  if(n.includes('tree pits'))return'alcorques';
-  if(n.includes('tree positions'))return'arboles';
-  if(n.includes('catastro footprints missing'))return'catastro';
-  if(n.includes('catastro footprints')||n.includes('roof plates')||n.includes('windows'))return'edificios';
+  if(n.includes('park'))return'parques';
+  if(n.includes('tree pit'))return'alcorques';
+  if(n.includes('tree position')||n.includes('municipal tree'))return'arboles';
+  if(n.includes('catastro')&&(n.includes('missing')||n.includes('ausente')))return'catastro';
+  if(n.includes('catastro')||n.includes('roof plate')||n.includes('window'))return'edificios';
   return null}
  document.querySelectorAll('[data-capa]').forEach(ch=>{
   ch.addEventListener('change',()=>{
