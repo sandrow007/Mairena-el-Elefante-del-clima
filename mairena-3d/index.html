@@ -482,7 +482,18 @@ try{
   generalTarget=c.clone();
   // encuadre ajustado al hueco visible real (ancho/aspecto del lienzo): el municipio llena la vista
   generalPos=new THREE.Vector3(c.x+r*.18,c.y+r*.62,c.z+r*.52);
-  {const k=encuadreK();generalPos.set(c.x+(generalPos.x-c.x)*k,c.y+(generalPos.y-c.y)*k,c.z+(generalPos.z-c.z)*k)}
+  {
+   // distancia calculada matemáticamente para que TODO el municipio quepa en el encuadre inicial,
+   // sea cual sea el tamaño de ventana o el aspecto (ya no depende de multiplicadores a ojo)
+   const dir=generalPos.clone().sub(c).normalize();
+   const esferaR=caja.getBoundingSphere(new THREE.Sphere()).radius;
+   const w0=canvas.clientWidth||innerWidth,h0=canvas.clientHeight||innerHeight,aspect=w0/h0;
+   const vFov=camara.fov*Math.PI/180;
+   const hFov=2*Math.atan(Math.tan(vFov/2)*aspect);
+   const distV=esferaR/Math.sin(vFov/2),distH=esferaR/Math.sin(hFov/2);
+   const dist=Math.max(distV,distH)*1.12; // +12% de margen para que no quede justo al borde
+   generalPos.copy(c).add(dir.multiplyScalar(dist));
+  }
   cenitalPos=new THREE.Vector3(c.x,c.y+r*1.05,c.z);
   construirBarrios();
   barra.parentElement.hidden=true;
