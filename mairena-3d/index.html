@@ -475,7 +475,8 @@ try{
   caja=new THREE.Box3().setFromObject(g.scene);
   // matrices listas ANTES de recortar: el centroide se calcula en coordenadas mundo
   raiz.updateWorldMatrix(true,true);
-  limpiarCatastroFuera();
+  // DESACTIVADO: este recorte borraba ~34% del catastro (hasta el 40% en Urbanización Mampela)
+  // limpiarCatastroFuera();
   // el terreno y la base vienen activados por defecto
   if(document.getElementById('terreno').checked)raiz.traverse(o=>{if(o.userData.base)o.visible=true});
   const c=caja.getCenter(new THREE.Vector3()),s=caja.getSize(new THREE.Vector3()),r=Math.max(s.x,s.y,s.z);
