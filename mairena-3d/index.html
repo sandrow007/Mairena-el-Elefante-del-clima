@@ -261,14 +261,15 @@ try{
  // ---- capas ----
  const capas={edificios:[],calles:[],parques:[],arboles:[],alcorques:[],catastro:[]};
  const matsVistas=new Set(); // materiales reales del modelo → nº de capas verdadero
+ // tolerante a variaciones de nombre en Blender (parks/park, tree pit(s), roof plate(s)…)
  function capaDe(n){
   n=norm(n);
   if(n.includes('street'))return'calles';
-  if(n.includes('parks'))return'parques';
-  if(n.includes('tree pits'))return'alcorques';
-  if(n.includes('tree positions'))return'arboles';
-  if(n.includes('catastro footprints missing'))return'catastro';
-  if(n.includes('catastro footprints')||n.includes('roof plates')||n.includes('windows'))return'edificios';
+  if(n.includes('park'))return'parques';
+  if(n.includes('tree pit')||n.includes('alcorque'))return'alcorques';
+  if(n.includes('tree position')||n.includes('tree inventory')||n.includes('municipal tree'))return'arboles';
+  if(n.includes('catastro')&&(n.includes('missing')||n.includes('ausente')||n.includes('absent')))return'catastro';
+  if(n.includes('catastro')||n.includes('roof plate')||n.includes('window'))return'edificios';
   return null}
  document.querySelectorAll('[data-capa]').forEach(ch=>{
   ch.addEventListener('change',()=>{
@@ -325,7 +326,8 @@ try{
  }
 
  // ---- catastro: ocultar SOLO lo que está completamente fuera del término municipal ----
- // No modifica nada dentro del municipio ni la ortofoto: descarta triángulos con los 3 vértices fuera.
+ // Usa el CENTROIDE del triángulo: conserva los de borde con parte de sus vértices fuera
+ // y no recorta nunca geometría cuyo centro esté dentro del municipio.
  function limpiarCatastroFuera(){
   const poly=FRONTERA.map(p=>[p[0],-p[1]]);
   function fuera(x,z){
@@ -340,18 +342,18 @@ try{
    const g=o.geometry,pos=g.attributes.position;
    if(!pos)return;
    o.updateWorldMatrix(true,false);
-   const m=o.matrixWorld,v=new THREE.Vector3();
-   const fueraV=new Uint8Array(pos.count),calc=new Uint8Array(pos.count);
+   const m=o.matrixWorld;
+   const vA=new THREE.Vector3(),vB=new THREE.Vector3(),vC=new THREE.Vector3();
    const idx=g.index,n=idx?idx.count:pos.count,keep=[];
-   function esFuera(i){
-    if(!calc[i]){v.fromBufferAttribute(pos,i).applyMatrix4(m);fueraV[i]=fuera(v.x,v.z)?1:0;calc[i]=1;}
-    return fueraV[i];
-   }
    for(let t=0;t+2<n;t+=3){
     const a=idx?idx.getX(t):t,b=idx?idx.getX(t+1):t+1,c=idx?idx.getX(t+2):t+2;
-    if(!(esFuera(a)&&esFuera(b)&&esFuera(c)))keep.push(a,b,c);
+    vA.fromBufferAttribute(pos,a).applyMatrix4(m);
+    vB.fromBufferAttribute(pos,b).applyMatrix4(m);
+    vC.fromBufferAttribute(pos,c).applyMatrix4(m);
+    const cx=(vA.x+vB.x+vC.x)/3,cz=(vA.z+vB.z+vC.z)/3;
+    if(!fuera(cx,cz))keep.push(a,b,c);
    }
-   if(keep.length===n)return;
+   if(keep.length===n)return; // sin cambios: no tocar la geometría
    g.setIndex(keep);
    if(g.boundsTree)g.disposeBoundsTree();
    if(keep.length)g.computeBoundsTree();
@@ -399,6 +401,8 @@ try{
    if(cp)capas[cp].push(o);
   });
   caja=new THREE.Box3().setFromObject(g.scene);
+  // matrices listas ANTES de recortar: el centroide se calcula en coordenadas mundo
+  raiz.updateWorldMatrix(true,true);
   limpiarCatastroFuera();
   // el terreno y la base vienen activados por defecto
   if(document.getElementById('terreno').checked)raiz.traverse(o=>{if(o.userData.base)o.visible=true});
