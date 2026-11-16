@@ -1635,14 +1635,30 @@ layers.gaptrees=polygons(data.gaptrees,'--gapT',.35,.6);
 layers.buildings3d=polygons(data.buildings3d,'--b3',.82,.3);
 layers.buildings2d=polygons(data.buildings2d,'--b2',.8,.3);
 layers.catbuildings=L.layerGroup();
-(function(){var src=document.getElementById('catastro-data');if(!src)return;var fc=JSON.parse(src.textContent);
-  fc.features.forEach(function(f){var p=f.properties||{};
+(function(){
+  var src=document.getElementById('catastro-data');if(!src)return;
+  var fc=JSON.parse(src.textContent),seen=Object.create(null);
+  function addFeature(f){
+    var p=f.properties||{};
+    if(p.r)seen[p.r]=true;
     var txt='<b>Edificio Catastro sin mapear</b>';
     if(p.r)txt+='<br>Referencia: '+escapeHtml(p.r);
     if(p.m)txt+='<br>Superficie: '+Number(p.m).toLocaleString('es-ES')+' m²';
     var shp=L.geoJSON(f,{pane:'data',renderer:renderer,style:function(){return{color:css('--cat'),weight:1.2,fillColor:css('--cat'),fillOpacity:.55};}});
     shp.bindPopup(txt,{maxWidth:260}).addTo(layers.catbuildings);
-  });})();
+  }
+  fc.features.forEach(addFeature);
+  /* El JSON incrustado puede quedarse atrás respecto al Catastro actualizado.
+     Completa solo referencias ausentes, sin duplicar ni tocar otras capas. */
+  var fallbacks=['./mairena_catastro_todos.json','../mairena_catastro_todos.json'];
+  function cargarFallback(i){
+    if(i>=fallbacks.length)return;
+    fetch(fallbacks[i]).then(function(r){if(!r.ok)throw new Error('Catastro HTTP '+r.status);return r.json();})
+      .then(function(latest){(latest.features||[]).forEach(function(f){var ref=(f.properties||{}).r;if(ref&&!seen[ref])addFeature(f);});})
+      .catch(function(){cargarFallback(i+1);});
+  }
+  cargarFallback(0);
+})(); 
 layers.trees=L.layerGroup();
 data.trees.forEach(function(p){L.circleMarker([p[0],p[1]],{pane:'data',renderer:renderer,radius:2.2,color:css('--tree'),weight:.6,fillColor:css('--tree'),fillOpacity:.9}).addTo(layers.trees);});
 var gapBadges=L.layerGroup(),gapDots=L.layerGroup();
