@@ -91,8 +91,32 @@ select{font:12px system-ui,sans-serif;border:1px solid var(--line);border-radius
  .chk{min-height:32px}
 }
 [hidden]{display:none!important}
+/* =====================
+   ARREGLO MÓVIL 17-nov-2026 (Sandro): solo se AÑADEN reglas, no se toca nada
+   - botones finos estilo iPhone
+   - legal en una sola fila fina, el bloque completo pegado abajo
+   - panel y lienzo aprovechan el borde superior
+   Escritorio intacto: todo va dentro de @media(max-width:700px)
+   ===================== */
+@media (max-width:700px){
+  #visor{top:0 !important; height:100dvh !important}
+  #hud{top:calc(8px + env(safe-area-inset-top,0px)) !important}
+  #barra-3d{grid-auto-rows:36px !important; gap:6px !important;
+            bottom:calc(8px + env(safe-area-inset-bottom,0px)) !important;
+            left:12px !important; right:12px !important}
+  #barra-3d button,#barra-3d a{height:36px !important; min-height:36px !important;
+            font-size:12px !important; padding:0 12px !important;
+            border-radius:999px !important; background:rgba(255,255,255,.93) !important}
+  .legal-bar{bottom:calc(94px + env(safe-area-inset-bottom,0px)) !important;
+            flex-wrap:nowrap !important; white-space:nowrap !important;
+            width:auto !important; max-width:calc(100vw - 20px) !important;
+            gap:0 12px !important; padding:3px 12px !important;
+            font-size:10px !important; background:rgba(255,255,255,.85) !important}
+  .legal-bar a{min-height:22px !important; padding:0 !important; white-space:nowrap !important}
+}
 </style>
 <script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/","three-mesh-bvh":"./vendor/three-mesh-bvh.module.js"}}</script>
+<base target="_blank">
 </head>
 <body>
 <canvas id="visor" aria-label="Modelo 3D de Mairena del Aljarafe" data-i18n-aria="canvas"></canvas>
@@ -104,7 +128,7 @@ select{font:12px system-ui,sans-serif;border:1px solid var(--line);border-radius
   <div class="cuerpo">
   <input id="buscar" type="search" list="lugares" placeholder="Buscar barrio o calle…" aria-label="Buscar barrio o calle" data-i18n-placeholder="search" data-i18n-aria="search">
   <datalist id="lugares"></datalist>
-  <div class="fila botones"><button id="ir" data-i18n="go">Ir al lugar</button><button id="reiniciar" data-i18n="overview">Vista general</button><button id="cenital" data-i18n="topview">Vista cenital</button><button id="girar" aria-pressed="false" data-i18n="rotate">⟳ Girar</button><button id="png">📷 PNG</button><a id="volver-mapa" href="https://sandrow007.github.io/Sititos-faltantes-por-dibujar-en-OSM/mairena_osm_huecos.html" target="_blank" rel="noopener" data-i18n="backToMap">🗺 Volver al mapa 2D</a></div>
+  <div class="fila botones"><button id="ir" data-i18n="go">Ir al lugar</button><button id="reiniciar" data-i18n="overview">Vista general</button><button id="cenital" data-i18n="topview">Vista cenital</button><button id="girar" aria-pressed="false" data-i18n="rotate">⟳ Girar</button><button id="png">📷 PNG</button><a id="volver-mapa" href="https://sandrow007.github.io/Mairena-el-Elefante-del-clima/mairena_osm_huecos.html" target="_blank" rel="noopener" data-i18n="backToMap">🗺 Volver al mapa 2D</a></div>
   <div class="grupo"><div class="grupo-t" data-i18n="background">Fondo</div>
     <div class="fila"><select id="fondo" aria-label="Color de fondo" data-i18n-aria="backgroundAria">
       <option value="marfil" selected data-i18n="ivory">Marfil (claro)</option>
@@ -474,14 +498,50 @@ try{
   caja=new THREE.Box3().setFromObject(g.scene);
   // matrices listas ANTES de recortar: el centroide se calcula en coordenadas mundo
   raiz.updateWorldMatrix(true,true);
-  limpiarCatastroFuera();
+  // DESACTIVADO: este recorte borraba ~34% del catastro (hasta el 40% en Urbanización Mampela)
+  // limpiarCatastroFuera();
   // el terreno y la base vienen activados por defecto
   if(document.getElementById('terreno').checked)raiz.traverse(o=>{if(o.userData.base)o.visible=true});
   const c=caja.getCenter(new THREE.Vector3()),s=caja.getSize(new THREE.Vector3()),r=Math.max(s.x,s.y,s.z);
   generalTarget=c.clone();
   // encuadre ajustado al hueco visible real (ancho/aspecto del lienzo): el municipio llena la vista
   generalPos=new THREE.Vector3(c.x+r*.18,c.y+r*.62,c.z+r*.52);
-  {const k=encuadreK();generalPos.set(c.x+(generalPos.x-c.x)*k,c.y+(generalPos.y-c.y)*k,c.z+(generalPos.z-c.z)*k)}
+  {
+   // distancia calculada matemáticamente para que TODO el municipio quepa en el encuadre inicial,
+   // sea cual sea el tamaño de ventana o el aspecto (ya no depende de multiplicadores a ojo)
+   const dir=generalPos.clone().sub(c).normalize();
+   const esferaR=caja.getBoundingSphere(new THREE.Sphere()).radius;
+   const w0=canvas.clientWidth||innerWidth,h0=canvas.clientHeight||innerHeight,aspect=w0/h0;
+   const vFov=camara.fov*Math.PI/180;
+   const hFov=2*Math.atan(Math.tan(vFov/2)*aspect);
+   const distV=esferaR/Math.sin(vFov/2),distH=esferaR/Math.sin(hFov/2);
+   const dist=Math.max(distV,distH)*1.12; // +12% de margen para que no quede justo al borde
+   generalPos.copy(c).add(dir.multiplyScalar(dist));
+  }
+   // +++ ARREGLO MÓVIL 17-nov-2026 (Sandro): en pantalla alta se encuadra el casco urbano grande +++
+   try{
+    const wP=canvas.clientWidth||innerWidth,hP=canvas.clientHeight||innerHeight;
+    if(wP/hP<0.85){
+     const cajaUrb=new THREE.Box3();let hayUrb=false;
+     g.scene.traverse(o=>{
+      if(!o.isMesh)return;
+      const mn=norm(o.material&&o.material.name);
+      if(mn.includes('park')||mn.includes('tree pit')||mn.includes('tree inventory')||mn.includes('municipal tree')||mn.includes('osm tree')){
+       cajaUrb.expandByObject(o);hayUrb=true;
+      }
+     });
+     if(hayUrb&&!cajaUrb.isEmpty()){
+      const cu=cajaUrb.getCenter(new THREE.Vector3()),su=cajaUrb.getSize(new THREE.Vector3());
+      const vFovP=camara.fov*Math.PI/180;
+      const hFovP=2*Math.atan(Math.tan(vFovP/2)*(wP/hP));
+      const dU=(su.x/2)/(0.72*Math.tan(hFovP/2));
+      const dirU=new THREE.Vector3(.30,1.02,.58).normalize();
+      generalPos.copy(cu).add(dirU.multiplyScalar(dU));
+      generalTarget=cu.clone();
+     }
+    }
+   }catch(e){}
+   // +++ FIN ARREGLO MÓVIL +++
   cenitalPos=new THREE.Vector3(c.x,c.y+r*1.05,c.z);
   construirBarrios();
   barra.parentElement.hidden=true;
