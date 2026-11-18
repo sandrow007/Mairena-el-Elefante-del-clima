@@ -1420,14 +1420,19 @@ svg.leaflet-image-layer.leaflet-interactive path {
   .cat-btn{padding:7px 10px;font-size:11px}
 }
 
+/* Acceso flotante al informe, apilado con discreción sobre el cuestionario */
+.btn-informe-float{position:fixed;z-index:1100;right:calc(12px + env(safe-area-inset-right));bottom:calc(58px + env(safe-area-inset-bottom));display:flex;justify-content:center;padding:7px 14px;font-size:11px;min-height:34px;border-color:var(--edge);background:var(--panel);color:var(--ink);text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.2)}
+.btn-informe-float .cat-dot{background:#00B98A}
+.btn-informe-float:hover{box-shadow:0 0 14px rgba(0,185,138,.32)}
 /* Movil: boton cuestionario flotante fijo abajo-derecha (fuera del panel, no afecta a imprimir/capturar) */
 .btn-cuest-float{position:fixed;z-index:1100;right:calc(12px + env(safe-area-inset-right));bottom:calc(12px + env(safe-area-inset-bottom));display:flex;justify-content:center;box-shadow:0 6px 18px rgba(138,79,255,.55);text-decoration:none}
-@media print{.btn-cuest-float{display:none!important}}
+@media print{.btn-cuest-float,.btn-informe-float{display:none!important}}
 @media(max-width:820px){
   .panel[open]{max-height:calc(100dvh - 170px);overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
   .btn-cuest-float{
     right:calc(10px + env(safe-area-inset-right));bottom:calc(10px + env(safe-area-inset-bottom));font-size:12px;padding:7px 14px;min-height:34px;font-weight:800;letter-spacing:.03em;box-shadow:none
   }
+  .btn-informe-float{right:calc(10px + env(safe-area-inset-right));bottom:calc(52px + env(safe-area-inset-bottom));font-size:11px;padding:6px 12px;min-height:32px;letter-spacing:.01em}
 /* Refinado movil: paleta del logo Manolit (cian/azul/violeta/rosa), estilo iPhone */
 @media(max-width:820px){
   .panel,.legend{
@@ -1587,6 +1592,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   .legal-bar a{padding:2px 0 !important; white-space:nowrap !important}
   .btn-cuest-float,.legend{bottom:calc(31px + env(safe-area-inset-bottom, 0px)) !important}
   .btn-cuest-float{right:calc(10px + env(safe-area-inset-right)) !important}
+  .btn-informe-float{right:calc(10px + env(safe-area-inset-right)) !important;bottom:calc(76px + env(safe-area-inset-bottom, 0px)) !important}
   .legend{left:calc(10px + env(safe-area-inset-left)) !important}
 }
 </style>
@@ -1929,7 +1935,7 @@ showLayer('gaps',true);
 showLayer('labels',true);
 map.once('moveend',function(){pendingFit=false;applyMinZoom();sync();});
 })();
-</script><nav class="legal-bar" aria-label="Informacion legal"><a href="https://manolitoaire.com/aviso-legal" target="_blank" rel="noopener"><span data-i18n="legal_notice">Aviso legal</span></a><a href="https://manolitoaire.com/cookies" target="_blank" rel="noopener"><span data-i18n="legal_cookies">Cookies</span></a><a href="https://manolitoaire.com/about" target="_blank" rel="noopener"><span data-i18n="legal_about">Quienes somos</span></a><a href="https://manolitoaire.com" target="_blank" rel="noopener"><span data-i18n="legal_routes">Rutas de sombra</span></a></nav>
+</script><a class="cat-btn btn-cuest btn-informe-float" href="./informe_alcorques_vacios.html" target="_blank" rel="noopener" aria-label="Abrir el informe de alcorques vacíos"><span class="cat-dot"></span><span>Informe de alcorques vacíos</span></a><a class="cat-btn btn-cuest btn-cuest-float" href="./cuestionario_alcorques_mairena.html" target="_blank" rel="noopener" title="Acceder al cuestionario sobre alcorques de Mairena" data-i18n-title="cuest_title"><span class="cat-dot"></span><span data-i18n="cuest">Acceder al cuestionario</span></a><nav class="legal-bar" aria-label="Informacion legal"><a href="https://manolitoaire.com/aviso-legal" target="_blank" rel="noopener"><span data-i18n="legal_notice">Aviso legal</span></a><a href="https://manolitoaire.com/cookies" target="_blank" rel="noopener"><span data-i18n="legal_cookies">Cookies</span></a><a href="https://manolitoaire.com/about" target="_blank" rel="noopener"><span data-i18n="legal_about">Quienes somos</span></a><a href="https://manolitoaire.com" target="_blank" rel="noopener"><span data-i18n="legal_routes">Rutas de sombra</span></a></nav>
 <script>
 /* Fix 15-nov-2026: en pantallas pequenas los paneles arrancan plegados para dejar el mapa libre */
 (function(){
