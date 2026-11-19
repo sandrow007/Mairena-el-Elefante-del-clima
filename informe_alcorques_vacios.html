@@ -13,6 +13,9 @@
 <meta name="twitter:title" content="Informe de alcorques vacíos — Mairena del Aljarafe · Manolit∞">
 <meta name="twitter:description" content="Análisis de los alcorques vacíos de Mairena del Aljarafe y propuesta de plantación.">
 <meta name="twitter:image" content="https://sandrow007.github.io/Mairena-el-Elefante-del-clima/og-mairena.jpg">
+<link rel="stylesheet" href=".leaflet-cache/leaflet.css">
+<script src=".leaflet-cache/leaflet.js"></script>
+<script>window.L = window.leaflet && (window.leaflet.default || window.leaflet);</script>
 <title>Informe de alcorques vacíos — Mairena del Aljarafe · Manolit∞</title>
 <style>
   :root{
@@ -77,6 +80,17 @@
   .sp-donde{margin-top:auto;padding-top:.65rem;border-top:1px solid #e3e6e0;font-size:.84rem;color:var(--ink-soft)}
   .sp-donde b{color:var(--ink)}
 
+  #mapa{height:520px;border:1px solid #dfe3dc;border-radius:var(--radio);z-index:0}
+  .mapa-leyenda{display:flex;flex-wrap:wrap;gap:.8rem;margin:.6rem 0 0;font-size:.84rem;color:var(--ink-soft)}
+  .mapa-leyenda .pt{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:.3rem;vertical-align:middle}
+  .exportes{display:flex;flex-wrap:wrap;gap:.5rem;margin:1rem 0}
+  .exportes a,.exportes button{display:inline-block;padding:.55rem 1rem;background:#fff;border:1px solid #cbd2c9;border-radius:4px;color:var(--verde-osc);font-weight:600;font-size:.87rem;text-decoration:none;cursor:pointer}
+  .exportes a:hover,.exportes button:hover{border-color:var(--verde);background:var(--verde-claro)}
+  .presu td,.presu th{text-align:right}
+  .presu td:first-child,.presu th:first-child{text-align:left}
+  .crono td{vertical-align:top}
+  .pdfbtn{display:inline-block;margin:.4rem 0;padding:.6rem 1.2rem;background:var(--verde);color:#fff;border-radius:4px;text-decoration:none;font-weight:600}
+  .pdfbtn:hover{background:var(--verde-osc)}
   .plan{border-left:2px solid #9bab98;margin-left:.6rem;padding-left:1.2rem}
   .plan .fase{position:relative;margin-bottom:1.4rem}
   .plan .fase::before{content:"";position:absolute;left:-1.62rem;top:.45rem;width:8px;height:8px;border-radius:50%;background:var(--verde)}
@@ -92,8 +106,49 @@
   #lb figcaption{position:absolute;bottom:1.2rem;color:#fff;font-weight:500}
   .buscar{width:100%;max-width:420px;padding:.65rem .8rem;border:1px solid #cbd2c9;border-radius:2px;font-size:.95rem;outline:none;margin-bottom:1rem;background:#fff}
   .buscar:focus{border-color:var(--verde)}
-  @media(max-width:640px){.hero-stats{gap:.2rem}.hstat{padding:.7rem .8rem .2rem 0;margin-right:.8rem}.hstat .n{font-size:1.3rem}}
-  @media print{nav.tabs,#lb,.hero-logo{display:none}.card,.sp-card{box-shadow:none;border:1px solid #bbb}.hero{background:#fff;color:#111;border-bottom:2px solid #17788a}.hero .sub,.hero .kicker,.hstat .l{color:#333}}
+  @media(max-width:640px){
+    body{font-size:16px;overflow-x:hidden}
+    .hero{padding:1.6rem 1rem 1.35rem}
+    .hero h1{font-size:clamp(1.75rem,8vw,2.25rem)}
+    .hero .sub{font-size:.96rem}
+    .hero-stats{gap:.15rem;margin-top:1rem}
+    .hstat{padding:.65rem .65rem .2rem 0;margin-right:.6rem}
+    .hstat .n{font-size:1.2rem}
+    .hstat .l{font-size:.72rem}
+    nav.tabs a{flex:0 0 auto;padding:.7rem .75rem;font-size:.82rem}
+    main{padding:1rem .85rem 2.5rem}
+    section{margin-top:1.8rem;scroll-margin-top:3.5rem}
+    h2{font-size:1.3rem;align-items:flex-start;line-height:1.3}
+    h2 .num{flex:0 0 auto}
+    .lead{font-size:.96rem}
+    .card{padding:1rem .85rem}
+    .sp-grid{grid-template-columns:minmax(0,1fr)}
+    .tbl-wrap,.mat-wrap{max-width:100%;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+    .tbl-wrap table,.mat-wrap table{min-width:620px}
+    .mat-wrap table{min-width:0;table-layout:fixed;font-size:.8rem}
+    .mat-wrap th,.mat-wrap td{padding:.5rem .38rem;overflow-wrap:anywhere;vertical-align:top}
+    .mat-wrap th:nth-child(1){width:24%}
+    .mat-wrap th:nth-child(2){width:13%}
+    .mat-wrap th:nth-child(3){width:23%}
+    .mat-wrap th:nth-child(4){width:20%}
+    .mat-wrap th:nth-child(5){width:20%}
+    #mapa{height:390px}
+    .exportes a,.exportes button{padding:.6rem .75rem}
+    footer{padding:1rem .9rem}
+  }
+  @media print{
+    nav.tabs,#lb,.hero-logo,.pdfbtn{display:none!important}
+    body.pdf-resumen>header,body.pdf-resumen>main>section:not(#pdf),body.pdf-resumen>footer,body.pdf-resumen>#lb{display:none!important}
+    body.pdf-resumen main{padding:0;max-width:none}
+    body.pdf-resumen #pdf{display:block!important;margin:0}
+    body.pdf-resumen #resumenEjecutivo{border:0;padding:0;margin:0}
+    body.pdf-resumen #resumenEjecutivo p{margin:.65rem 0}
+    body:not(.pdf-resumen) #pdf{display:none!important}
+    body:not(.pdf-resumen) #plan{display:block!important}
+    .card,.sp-card{box-shadow:none;border:1px solid #bbb}
+    .hero{background:#fff;color:#111;border-bottom:2px solid #17788a}
+    .hero .sub,.hero .kicker,.hstat .l{color:#333}
+  }
 </style>
 </head>
 <body>
@@ -136,9 +191,16 @@
   <a href="#resumen" class="on">Resumen</a>
   <a href="#barrios">Por barrio</a>
   <a href="#calles">Por calle</a>
+  <a href="#mapa-sec">Mapa</a>
   <a href="#especies">Especies</a>
   <a href="#matriz">Recomendaciones</a>
+  <a href="#presupuesto">Presupuesto</a>
+  <a href="#impacto">Impacto</a>
+  <a href="#cronograma">Cronograma</a>
+  <a href="#mantenimiento">Mantenimiento</a>
+  <a href="#financiacion">Financiación</a>
   <a href="#plan">Plan de actuación</a>
+  <a href="#pdf">Imprimir / PDF</a>
 </nav>
 
 <main>
@@ -205,9 +267,28 @@
   <p style="margin-top:.7rem;color:var(--ink-soft);font-size:.85rem">Mostrando <b id="nCalles">30</b> de 30 calles destacadas (las 30 mayores concentraciones del inventario).</p>
 </section>
 
-<!-- ============ 4. ESPECIES ============ -->
+<!-- ============ MAPA ============ -->
+<section id="mapa-sec">
+  <h2><span class="num">4</span> Mapa geolocalizado de los 635 alcorques</h2>
+  <p class="lead">Cada punto es un alcorque vacío del inventario municipal, con su posición real (fuentes: inventario de arbolado, OSM y Catastro). Coloreado por fase de plantación propuesta. Haz clic en un punto para ver su barrio y fase.</p>
+  <div class="exportes">
+    <button onclick="descarga('geojson')">⬇ GeoJSON</button>
+    <button onclick="descarga('kml')">⬇ KML (Google Earth)</button>
+    <button onclick="descarga('csv')">⬇ CSV (Excel/GIS)</button>
+    <button onclick="descarga('especies-csv')">⬇ Matriz de especies (CSV)</button>
+  </div>
+  <div id="mapa"></div>
+  <div class="mapa-leyenda">
+    <span><span class="pt" style="background:#17788a"></span>1ª fase — Tres Barras + Camino Peralta</span>
+    <span><span class="pt" style="background:#c24500"></span>2ª fase — Casco Antiguo + Rosales</span>
+    <span><span class="pt" style="background:#7a5ea8"></span>3ª fase — Bulevar + Almendral</span>
+    <span><span class="pt" style="background:#8a9a8a"></span>Fases posteriores (resto de barrios)</span>
+  </div>
+</section>
+
+<!-- ============ 5. ESPECIES ============ -->
 <section id="especies">
-  <h2><span class="num">4</span> Especies incluidas en el cuestionario</h2>
+  <h2><span class="num">5</span> Especies incluidas en el cuestionario</h2>
   <p class="lead">Son las mismas especies y las mismas fotografías del cuestionario ciudadano (<a href="https://sandrow007.github.io/Mairena-el-Elefante-del-clima/cuestionario_alcorques_mairena.html" target="_blank" rel="noopener noreferrer">abrir el cuestionario</a>). Haz clic en cualquier foto para ampliarla.</p>
   <div class="sp-grid" id="spGrid"></div>
 
@@ -222,9 +303,9 @@
   </div>
 </section>
 
-<!-- ============ 5. MATRIZ ============ -->
+<!-- ============ 6. MATRIZ ============ -->
 <section id="matriz">
-  <h2><span class="num">5</span> Matriz barrio → tipo → especie recomendada</h2>
+  <h2><span class="num">6</span> Matriz barrio → tipo → especie recomendada</h2>
   <p class="lead">Asignación completa y justificada para los 33 barrios. Filtra por tipo de espacio:</p>
   <div class="filtros">
     <button class="pill" data-f="*" style="cursor:pointer;border:none;font-size:.85rem;padding:.4rem .9rem">Todos (33)</button>
@@ -240,9 +321,104 @@
   </div>
 </section>
 
-<!-- ============ 6. PLAN ============ -->
+<!-- ============ 7. PRESUPUESTO ============ -->
+<section id="presupuesto">
+  <h2><span class="num">7</span> Presupuesto orientativo en euros</h2>
+  <p class="lead">Estimación preliminar en <b>euros (€)</b>, con horquillas de trabajo para planificar; no es tarifa oficial ni precio de adjudicación. Incluye suministro, plantación y establecimiento. Hay que contrastarla con precios unitarios locales y ofertas antes de aprobar el proyecto. Costes sin IVA en el cuadro y total con IVA estimado al 21 % indicado aparte.</p>
+  <div class="tbl-wrap">
+    <table class="presu">
+      <thead><tr><th>Partida por árbol</th><th>Rango neto estimado</th><th>Hipótesis</th></tr></thead>
+      <tbody>
+        <tr><td>Árbol de vivero (calibre y especie adecuados)</td><td>45–110 €</td><td>Rango de planificación; confirmar especie, calibre, cepellón y transporte con viveros.</td></tr>
+        <tr><td>Apertura / saneado / acondicionamiento del alcorque</td><td>80–180 €</td><td>Depende de pavimento, volumen de suelo, residuos y servicios enterrados.</td></tr>
+        <tr><td>Plantación, tutorado, protecciones y acolchado</td><td>45–90 €</td><td>Mano de obra, tutores y materiales; variar por accesibilidad.</td></tr>
+        <tr><td>Riego de establecimiento y revisiones (2–3 veranos)</td><td>150–300 €</td><td>Plan de riegos; ajustar a agua, distancia, frecuencia y coste del contrato municipal.</td></tr>
+        <tr><td><b>Total orientativo por alcorque</b></td><td><b>320–680 € netos</b></td><td>Sin reparaciones extraordinarias de redes ni reposición de pavimento extenso.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="lead" style="margin-top:.75rem">Para dimensionar la partida se muestra una hipótesis de <b>500 € netos por unidad</b> (605 € con IVA al 21 %). No es tarifa observada; el presupuesto contractual debe basarse en mediciones, costes indirectos, seguridad y salud, gastos generales, beneficio industrial e IVA según proceda.</p>
+  <p class="lead" style="margin-top:1rem">La tabla siguiente reparte una segunda hipótesis de coste por tipología de espacio (A: 300–430 €/ud; B: 330–480 €/ud; C: 380–530 €/ud, netos). La mezcla por fase se estima con el tipo asignado a cada barrio y su número de alcorques; no es una medición de proyecto ni una oferta. Se muestra el punto medio del rango como referencia y no se añade IVA.</p>
+  <div class="tbl-wrap">
+    <table class="presu">
+      <thead><tr><th>Fase prioritaria</th><th>N.º alcorques</th><th>Mezcla estimada</th><th>Mínimo neto</th><th>Máximo neto</th><th>Punto medio</th></tr></thead>
+      <tbody id="tbPresuFases"></tbody>
+      <tfoot><tr><th>Total 3 fases</th><th id="pfTotal">—</th><th>Estimación agregada</th><th id="pfMin">—</th><th id="pfMax">—</th><th id="pfMed">—</th></tr></tfoot>
+    </table>
+  </div>
+  <div class="nota alerta"><b>Importante:</b> las tres fases comprenden 330 de los 635 alcorques. El total dinámico de esta tabla usa costes por tipo de espacio y no debe confundirse con la hipótesis independiente de 500 € netos/unidad (317.500 € netos; 384.175 € con IVA al 21 % para 635 huecos). Ambas son referencias preliminares: contrastar alcances, precios y cantidades con visitas, mediciones y ofertas locales antes de aprobar o licitar.</div>
+</section>
+
+<!-- ============ 8. IMPACTO ============ -->
+<section id="impacto">
+  <h2><span class="num">8</span> Beneficios potenciales e indicadores</h2>
+  <p class="lead">No es riguroso asignar ahora una cifra cerrada de m² de sombra, grados de enfriamiento o toneladas de CO₂: depende de especie, calibre, supervivencia, suelo y copa adulta. Para el expediente, se propone medir y modelar esos indicadores tras definir especies, con datos de copa y supervivencia; no se confunden proyecciones con resultados garantizados.</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Indicador a evaluar</th><th>Cómo calcular / verificar</th><th>Momento</th></tr></thead>
+    <tbody>
+      <tr><td>Sombra proyectada (m²)</td><td>Proyección de copa por especie y edad, evitando sumar solapes; inventario GIS de copas.</td><td>Línea base y años 5, 10 y 15</td></tr>
+      <tr><td>Temperatura superficial / confort térmico</td><td>Medición comparable bajo copa y en superficie expuesta (hora, fecha y meteorología controladas); no interpretar como enfriamiento del aire.</td><td>Antes y después de la plantación; verano</td></tr>
+      <tr><td>CO₂ capturado y almacenado</td><td>Modelo de arbolado urbano (p. ej. i-Tree Eco) con especie, diámetro, supervivencia y crecimiento locales.</td><td>Actualizar cada 3–5 años</td></tr>
+      <tr><td>Supervivencia y riego</td><td>Árboles vivos, marras, litros/aporte y coste por campaña.</td><td>Semestral durante 3 años</td></tr>
+    </tbody>
+  </table></div>
+  <div class="nota">Las cifras de impacto deben salir de un método reproducible y una línea base. Hasta entonces se publican como indicadores a estimar, no como promesas cuantificadas.</div>
+</section>
+
+<!-- ============ 9. CRONOGRAMA ============ -->
+<section id="cronograma">
+  <h2><span class="num">9</span> Cronograma propuesto (2027–2029)</h2>
+  <p class="lead">Fechas de planificación sujetas a aprobación y licitación. Próxima ventana de plantación: otoño–invierno 2027/28; para especies y formatos aptos de raíz desnuda, concentrar plantación durante dormancia, evitando heladas, calor y suelo encharcado.</p>
+  <div class="tbl-wrap"><table class="crono">
+    <thead><tr><th>Fase</th><th>Preparación y proyecto</th><th>Contratación / verificación</th><th>Plantación recomendada</th><th>Establecimiento</th></tr></thead>
+    <tbody>
+      <tr><td><b>1 (133)</b></td><td>Jul–Sep 2027</td><td>Sep–Nov 2027</td><td><b>Nov 2027–Feb 2028</b></td><td>Riego y seguimiento hasta verano 2030</td></tr>
+      <tr><td><b>2 (107)</b></td><td>Jul–Sep 2028</td><td>Sep–Nov 2028</td><td><b>Nov 2028–Feb 2029</b></td><td>Riego y seguimiento hasta verano 2031</td></tr>
+      <tr><td><b>3 (90)</b></td><td>Jul–Sep 2029</td><td>Sep–Nov 2029</td><td><b>Nov 2029–Feb 2030</b></td><td>Riego y seguimiento hasta verano 2032</td></tr>
+    </tbody>
+  </table></div>
+  <div class="nota alerta"><b>Condición:</b> calendario indicativo, no fecha aprobada. No presentar como vigente la ventana 2026–27, ya pasada.</div>
+</section>
+
+<!-- ============ 10. MANTENIMIENTO ============ -->
+<section id="mantenimiento">
+  <h2><span class="num">10</span> Mantenimiento y responsable</h2>
+  <p class="lead">Propuesta para incorporar al pliego y validar con Parques y Jardines. El contratista ejecuta el mantenimiento durante la garantía; el Ayuntamiento supervisa y recibe.</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Tarea</th><th>Frecuencia orientativa</th><th>Responsable propuesto</th><th>Control</th></tr></thead>
+    <tbody>
+      <tr><td>Riego de establecimiento</td><td>Plan estacional, reforzado con calor/sequía y ajustado a suelo y especie</td><td>Contratista según pliego</td><td>Registro de fecha, volumen y árbol; verificación técnica municipal</td></tr>
+      <tr><td>Revisión de tutores, alcorque y estado sanitario</td><td>Mensual en crecimiento y tras episodios extremos</td><td>Contratista; inspección municipal</td><td>Incidencias y acciones correctoras</td></tr>
+      <tr><td>Reposición de marras</td><td>Al cierre de cada campaña de supervivencia</td><td>Contratista durante garantía según pliego</td><td>Umbral y plazo definidos en contrato</td></tr>
+      <tr><td>Poda de formación / plagas</td><td>Según necesidad y criterios técnicos</td><td>Servicio municipal o contratista, según contrato</td><td>Orden de trabajo y ficha por árbol</td></tr>
+      <tr><td>Recepción y mantenimiento posterior</td><td>Recepción tras garantía propuesta de 3 años</td><td>Técnico municipal responsable del contrato</td><td>Acta de recepción; después, presupuesto ordinario</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ============ 11. FINANCIACIÓN ============ -->
+<section id="financiacion">
+  <h2><span class="num">11</span> Vías de financiación a estudiar</h2>
+  <p class="lead">Opciones para consultar con Secretaría, Intervención y la oficina municipal de fondos europeos. La disponibilidad depende de las convocatorias vigentes y de las bases de cada programa; no se consideran ingresos concedidos.</p>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Vía</th><th>Uso potencial</th><th>Precaución / siguiente paso</th></tr></thead>
+      <tbody>
+        <tr><td><b>Diputación de Sevilla</b> — planes provinciales de cooperación e inversión municipal</td><td>Obra civil, mejora del espacio público y, si las bases lo permiten, infraestructura verde y arbolado.</td><td>Consultar bases del plan y anualidad vigente; no dar por elegible sin confirmación de Diputación.</td></tr>
+        <tr><td><b>PFEA</b> (Programa de Fomento del Empleo Agrario)</td><td>Proyectos de obra de interés general que creen empleo agrario; posible acondicionamiento de espacio público.</td><td>Elegibilidad de plantación, materiales y riego debe validarse con SEPE/Diputación; no asumir que financia el suministro completo de árboles.</td></tr>
+        <tr><td><b>Fundación Biodiversidad / MITECO y fondos UE</b></td><td>Proyectos integrales de renaturalización, conectividad verde y adaptación al calor.</td><td>Solicitar solo ante convocatoria abierta y proyecto con indicadores, mantenimiento y cofinanciación; NextGenerationEU no es una línea abierta permanente.</td></tr>
+        <tr><td><b>Presupuesto municipal, patrocinios o padrinazgo</b></td><td>Contrapartida, riego y reposición de marras.</td><td>Patrocinio sujeto a las reglas municipales; definir titularidad, riego y seguimiento con el Ayuntamiento.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="lead" style="margin-top:.8rem">Enlaces oficiales: <a href="https://www.dipusevilla.es/" target="_blank" rel="noopener noreferrer">Diputación de Sevilla</a> · <a href="https://www.sepe.es/" target="_blank" rel="noopener noreferrer">SEPE / PFEA</a> · <a href="https://fundacion-biodiversidad.es/" target="_blank" rel="noopener noreferrer">Fundación Biodiversidad</a> · <a href="https://www.miteco.gob.es/" target="_blank" rel="noopener noreferrer">MITECO</a>.</p>
+</section>
+
+
+
+<!-- ============ 13. PLAN ============ -->
 <section id="plan">
-  <h2><span class="num">6</span> Propuesta de actuación</h2>
+  <h2><span class="num">13</span> Propuesta de actuación</h2>
   <p class="lead">Tres fases por impacto decreciente. Cada fase es un único expediente de plantación municipal.</p>
   <div class="card">
     <div class="plan">
@@ -264,7 +440,22 @@
     </div>
   </div>
   <div class="nota">
-    Con las tres fases se cubre el <strong>52 % del déficit municipal</strong> con solo 3 expedientes. El resto de barrios (48 %) puede abordarse en convocatorias anuales menores siguiendo la matriz de la sección 5.
+    Las tres fases priorizan 330 alcorques; el número de barrios y las prioridades deben contrastarse con los 635 puntos del inventario GIS, no extrapolarse desde el resumen agregado.
+  </div>
+</section>
+
+<!-- ============ 14. IMPRESIÓN ============ -->
+<section id="pdf">
+  <h2><span class="num">14</span> Resumen ejecutivo imprimible</h2>
+  <p class="lead">Pulsa para abrir el diálogo de impresión y elige «Guardar como PDF». Se imprime únicamente la ficha ejecutiva de debajo.</p>
+  <button class="pdfbtn" type="button" onclick="imprimeResumen()">Imprimir / guardar resumen como PDF</button>
+  <div class="card" id="resumenEjecutivo">
+    <h3 style="color:var(--verde-osc);margin-bottom:.7rem">Alcorques vacíos — Mairena del Aljarafe</h3>
+    <p><b>Diagnóstico.</b> Inventario de 635 alcorques vacíos en 33 barrios y 146 calles. Seis barrios reúnen aproximadamente el 52 % del total; C/ Ciaurriz registra la mayor concentración.</p>
+    <p><b>Propuesta.</b> Plantación gradual por fases, selección de especies adaptadas al clima del Aljarafe y verificación previa de cada hueco (servicios enterrados, espacio, estado y accesibilidad).</p>
+    <p><b>Presupuesto.</b> Estimación preliminar en euros: árbol, apertura/acondicionamiento, plantación y riego de establecimiento. Las horquillas deben sustituirse por precios unitarios contrastados y proyecto técnico antes de licitar.</p>
+    <p><b>Seguimiento.</b> Riego y revisión durante los primeros veranos, reposición de marras y recepción por Parques y Jardines; financiación externa solo si existe convocatoria y elegibilidad confirmadas.</p>
+    <p><b>Datos abiertos.</b> Las coordenadas se pueden descargar como GeoJSON, KML y CSV para incorporarlas a un SIG municipal.</p>
   </div>
 </section>
 
@@ -281,6 +472,7 @@
 
 <script>
 /* ================== DATOS ================== */
+const PUNTOS=[[37.339687,-6.058878,"Almendral",3],[37.338535,-6.057394,"Almendral",3],[37.338559,-6.059533,"Almendral",3],[37.337578,-6.05878,"Almendral",3],[37.336803,-6.057979,"Almendral",3],[37.336852,-6.058302,"Almendral",3],[37.337066,-6.058512,"Almendral",3],[37.338055,-6.0594,"Almendral",3],[37.338558,-6.059749,"Almendral",3],[37.338685,-6.05983,"Almendral",3],[37.340111,-6.058171,"Almendral",3],[37.340077,-6.058695,"Almendral",3],[37.339695,-6.056514,"Almendral",3],[37.339991,-6.056907,"Almendral",3],[37.340747,-6.055015,"Almendral",3],[37.340648,-6.054848,"Almendral",3],[37.340521,-6.05467,"Almendral",3],[37.339805,-6.05355,"Almendral",3],[37.339967,-6.053963,"Almendral",3],[37.342326,-6.054852,"Almendral",3],[37.342174,-6.055154,"Almendral",3],[37.342031,-6.055434,"Almendral",3],[37.340876,-6.057565,"Almendral",3],[37.338277,-6.058597,"Almendral",3],[37.338866,-6.0576,"Almendral",3],[37.338966,-6.057479,"Almendral",3],[37.335977,-6.058245,"Almendral",3],[37.33552,-6.058745,"Almendral",3],[37.335285,-6.059075,"Almendral",3],[37.335668,-6.058556,"Almendral",3],[37.336019,-6.058205,"Almendral",3],[37.336189,-6.058064,"Almendral",3],[37.335575,-6.058676,"Almendral",3],[37.336084,-6.058151,"Almendral",3],[37.336138,-6.058098,"Almendral",3],[37.33918,-6.059519,"Almendral",3],[37.338464,-6.057093,"Almendral",3],[37.335879,-6.039177,"Simon Verde",0],[37.341396,-6.037508,"Simon Verde",0],[37.342873,-6.03715,"Simon Verde",0],[37.342925,-6.037122,"Simon Verde",0],[37.34311,-6.037036,"Simon Verde",0],[37.343341,-6.036941,"Simon Verde",0],[37.344391,-6.036482,"Simon Verde",0],[37.344432,-6.036469,"Simon Verde",0],[37.344624,-6.036411,"Simon Verde",0],[37.344683,-6.036388,"Simon Verde",0],[37.344907,-6.036347,"Simon Verde",0],[37.344989,-6.036331,"Simon Verde",0],[37.345044,-6.036321,"Simon Verde",0],[37.345185,-6.036296,"Simon Verde",0],[37.345304,-6.036284,"Simon Verde",0],[37.34536,-6.03627,"Simon Verde",0],[37.345464,-6.036248,"Simon Verde",0],[37.339289,-6.03519,"Simon Verde",0],[37.339344,-6.035193,"Simon Verde",0],[37.348032,-6.035661,"Simon Verde",0],[37.346444,-6.03426,"Simon Verde",0],[37.346441,-6.034216,"Simon Verde",0],[37.34337,-6.033723,"Simon Verde",0],[37.345709,-6.038295,"Simon Verde",0],[37.345639,-6.037353,"Simon Verde",0],[37.345634,-6.037308,"Simon Verde",0],[37.343905,-6.03614,"Simon Verde",0],[37.344225,-6.035739,"Simon Verde",0],[37.344205,-6.03579,"Simon Verde",0],[37.343989,-6.036234,"Simon Verde",0],[37.344003,-6.036326,"Simon Verde",0],[37.344097,-6.036492,"Simon Verde",0],[37.349343,-6.039115,"Ciudad Aljarafe",0],[37.349304,-6.039146,"Ciudad Aljarafe",0],[37.349244,-6.039191,"Ciudad Aljarafe",0],[37.34922,-6.039455,"Ciudad Aljarafe",0],[37.347564,-6.040368,"Ciudad Aljarafe",0],[37.347681,-6.043447,"Ciudad Aljarafe",0],[37.347699,-6.043235,"Ciudad Aljarafe",0],[37.349517,-6.042839,"Ciudad Aljarafe",0],[37.348111,-6.040171,"Ciudad Aljarafe",0],[37.348181,-6.04013,"Ciudad Aljarafe",0],[37.348242,-6.040066,"Ciudad Aljarafe",0],[37.348334,-6.039998,"Ciudad Aljarafe",0],[37.348837,-6.039588,"Ciudad Aljarafe",0],[37.348882,-6.039558,"Ciudad Aljarafe",0],[37.348932,-6.039499,"Ciudad Aljarafe",0],[37.348684,-6.042822,"Ciudad Aljarafe",0],[37.348566,-6.042914,"Ciudad Aljarafe",0],[37.349764,-6.041896,"Ciudad Aljarafe",0],[37.34837,-6.040794,"Ciudad Aljarafe",0],[37.348578,-6.040611,"Ciudad Aljarafe",0],[37.34891,-6.039858,"Ciudad Aljarafe",0],[37.34894,-6.039896,"Ciudad Aljarafe",0],[37.348951,-6.039935,"Ciudad Aljarafe",0],[37.348973,-6.039976,"Ciudad Aljarafe",0],[37.348993,-6.040027,"Ciudad Aljarafe",0],[37.349173,-6.040342,"Ciudad Aljarafe",0],[37.349276,-6.040567,"Ciudad Aljarafe",0],[37.349281,-6.041682,"Ciudad Aljarafe",0],[37.349559,-6.035613,"Pinar de Simon Verde",0],[37.349578,-6.034816,"Pinar de Simon Verde",0],[37.352662,-6.045002,"Aljarasol / Alboaire",0],[37.350262,-6.042902,"Aljarasol / Alboaire",0],[37.353053,-6.044488,"Aljarasol / Alboaire",0],[37.353099,-6.044437,"Aljarasol / Alboaire",0],[37.350099,-6.03672,"Pinar de Simon Verde",0],[37.350158,-6.036679,"Pinar de Simon Verde",0],[37.350082,-6.036879,"Las Brisas I",0],[37.350145,-6.036832,"Las Brisas I",0],[37.351175,-6.036074,"El Bus",0],[37.351504,-6.035775,"El Bus",0],[37.351701,-6.035627,"El Bus",0],[37.351787,-6.035564,"El Bus",0],[37.353286,-6.034788,"Lepanto",0],[37.353373,-6.034747,"Lepanto",0],[37.353399,-6.034734,"Lepanto",0],[37.353512,-6.03466,"Lepanto",0],[37.353546,-6.034642,"Lepanto",0],[37.353582,-6.034625,"Lepanto",0],[37.353678,-6.034575,"Lepanto",0],[37.353758,-6.034544,"Lepanto",0],[37.353821,-6.034511,"Lepanto",0],[37.353873,-6.034496,"Lepanto",0],[37.351443,-6.035667,"Virgen del Rocio",0],[37.351477,-6.035643,"Virgen del Rocio",0],[37.3517,-6.03549,"Virgen del Rocio",0],[37.351999,-6.035349,"Virgen del Rocio",0],[37.352063,-6.035306,"Virgen del Rocio",0],[37.352131,-6.035265,"Virgen del Rocio",0],[37.352238,-6.035198,"Virgen del Rocio",0],[37.352563,-6.035025,"Virgen del Rocio",0],[37.352869,-6.034864,"Virgen del Rocio",0],[37.353134,-6.034734,"Virgen del Rocio",0],[37.353219,-6.034698,"Virgen del Rocio",0],[37.353531,-6.034532,"Virgen del Rocio",0],[37.35537,-6.034529,"Altozano",0],[37.355468,-6.034439,"Altozano",0],[37.3548,-6.035324,"Altozano",0],[37.346736,-6.045064,"Los Alcores",0],[37.346822,-6.04507,"Los Alcores",0],[37.345167,-6.045165,"Ciudad Almar",0],[37.346258,-6.045853,"Ciudad Almar",0],[37.346644,-6.046301,"Ciudad Almar",0],[37.346686,-6.046352,"Ciudad Almar",0],[37.346731,-6.046405,"Ciudad Almar",0],[37.346788,-6.046462,"Ciudad Almar",0],[37.347287,-6.047486,"Hacienda Los Olivos",0],[37.347268,-6.047418,"Hacienda Los Olivos",0],[37.3471,-6.047076,"Ciudad Almar",0],[37.345039,-6.043982,"Los Alcores",0],[37.346301,-6.043628,"Los Alcores",0],[37.346771,-6.043221,"Los Alcores",0],[37.341851,-6.051329,"Almendral",3],[37.348941,-6.048299,"Ciudad Expo",0],[37.349866,-6.048778,"Ciudad Expo",0],[37.34993,-6.048714,"Ciudad Expo",0],[37.349495,-6.048489,"Ciudad Expo",0],[37.353385,-6.036294,"Lepanto",0],[37.35086,-6.037358,"El Bus",0],[37.350855,-6.037172,"El Bus",0],[37.348503,-6.044982,"Alboraire I",0],[37.345067,-6.055344,"Bulevar",3],[37.346411,-6.061218,"Casco Antiguo",2],[37.346455,-6.061182,"Casco Antiguo",2],[37.346484,-6.061148,"Casco Antiguo",2],[37.347947,-6.059423,"Campoalegre",0],[37.347984,-6.059355,"Campoalegre",0],[37.347561,-6.059932,"Campoalegre",0],[37.347633,-6.059826,"Campoalegre",0],[37.34827,-6.058362,"Campoalegre",0],[37.348458,-6.057657,"Campoalegre",0],[37.348639,-6.057474,"Campoalegre",0],[37.349446,-6.049452,"Ciudad Expo",0],[37.34968,-6.050666,"Ciudad Expo",0],[37.350588,-6.048836,"Ciudad Expo",0],[37.350668,-6.049101,"Ciudad Expo",0],[37.350047,-6.050335,"Ciudad Expo",0],[37.351076,-6.048566,"Ciudad Expo",0],[37.351106,-6.048468,"Ciudad Expo",0],[37.351353,-6.048077,"Ciudad Expo",0],[37.351441,-6.048022,"Ciudad Expo",0],[37.351505,-6.047989,"Ciudad Expo",0],[37.351562,-6.047968,"Ciudad Expo",0],[37.351621,-6.047966,"Ciudad Expo",0],[37.351681,-6.047967,"Ciudad Expo",0],[37.351235,-6.048855,"Ciudad Expo",0],[37.35447,-6.043284,"Monte Aljarafe",0],[37.35457,-6.043027,"Monte Aljarafe",0],[37.356995,-6.038633,"Lepanto",0],[37.34563,-6.046494,"Ciudad Almar",0],[37.345231,-6.046446,"Ciudad Almar",0],[37.346012,-6.046142,"Ciudad Almar",0],[37.346232,-6.046293,"Ciudad Almar",0],[37.346462,-6.04721,"Ciudad Almar",0],[37.345687,-6.047077,"Ciudad Almar",0],[37.34584,-6.047025,"Ciudad Almar",0],[37.345728,-6.046874,"Ciudad Almar",0],[37.348206,-6.046577,"Hacienda Los Olivos",0],[37.348199,-6.046696,"Hacienda Los Olivos",0],[37.353852,-6.042046,"Monte Aljarafe",0],[37.352761,-6.03927,"Lepanto",0],[37.352685,-6.038692,"Lepanto",0],[37.352506,-6.039014,"Lepanto",0],[37.352918,-6.038886,"Lepanto",0],[37.352941,-6.038843,"Lepanto",0],[37.352951,-6.038724,"Lepanto",0],[37.352922,-6.038762,"Lepanto",0],[37.35288,-6.038817,"Lepanto",0],[37.352902,-6.038789,"Lepanto",0],[37.352845,-6.03888,"Lepanto",0],[37.352728,-6.038639,"Lepanto",0],[37.352865,-6.038535,"Lepanto",0],[37.352938,-6.038611,"Lepanto",0],[37.352903,-6.038494,"Lepanto",0],[37.352858,-6.038424,"Lepanto",0],[37.354547,-6.03802,"Lepanto",0],[37.35464,-6.037799,"Lepanto",0],[37.353272,-6.035473,"Lepanto",0],[37.356771,-6.037825,"Lepanto",0],[37.356724,-6.037909,"Lepanto",0],[37.346902,-6.056807,"Rosales",2],[37.346803,-6.056768,"Rosales",2],[37.346514,-6.056593,"Rosales",2],[37.346499,-6.056588,"Rosales",2],[37.346195,-6.056449,"Rosales",2],[37.345806,-6.056191,"Rosales",2],[37.345689,-6.056105,"Rosales",2],[37.345657,-6.056083,"Rosales",2],[37.345517,-6.055987,"Rosales",2],[37.345382,-6.055881,"Rosales",2],[37.346635,-6.057074,"Rosales",2],[37.346632,-6.057101,"Rosales",2],[37.346502,-6.057579,"Rosales",2],[37.346498,-6.057617,"Rosales",2],[37.346198,-6.057095,"Rosales",2],[37.346313,-6.057267,"Rosales",2],[37.346277,-6.057259,"Rosales",2],[37.346007,-6.057133,"Rosales",2],[37.34598,-6.057122,"Rosales",2],[37.345588,-6.056868,"Rosales",2],[37.345299,-6.056664,"Rosales",2],[37.345277,-6.056648,"Rosales",2],[37.345494,-6.056675,"Rosales",2],[37.345478,-6.056657,"Rosales",2],[37.345204,-6.056477,"Rosales",2],[37.345183,-6.056463,"Rosales",2],[37.344984,-6.057165,"Rosales",2],[37.345125,-6.057312,"Rosales",2],[37.345299,-6.057396,"Rosales",2],[37.345353,-6.057435,"Rosales",2],[37.345281,-6.057437,"Rosales",2],[37.345329,-6.057483,"Rosales",2],[37.344977,-6.057608,"Rosales",2],[37.344997,-6.058177,"Rosales",2],[37.345182,-6.05828,"Rosales",2],[37.345849,-6.05953,"Rosales",2],[37.345894,-6.059405,"Rosales",2],[37.347608,-6.058645,"Campoalegre",0],[37.346705,-6.058033,"Campoalegre",0],[37.346548,-6.057932,"Campoalegre",0],[37.346606,-6.058912,"Campoalegre",0],[37.344687,-6.059023,"Rosales",2],[37.344325,-6.05887,"Rosales",2],[37.345603,-6.057487,"Rosales",2],[37.343553,-6.063048,"Casco Antiguo",2],[37.345603,-6.066403,"Casco Antiguo",2],[37.344478,-6.065929,"Casco Antiguo",2],[37.34552,-6.065004,"Casco Antiguo",2],[37.341977,-6.062466,"Casco Antiguo",2],[37.341617,-6.063256,"Casco Antiguo",2],[37.341518,-6.063487,"Casco Antiguo",2],[37.341312,-6.06394,"Casco Antiguo",2],[37.341184,-6.064243,"Casco Antiguo",2],[37.341071,-6.064496,"Casco Antiguo",2],[37.341323,-6.064193,"Casco Antiguo",2],[37.341865,-6.063232,"Casco Antiguo",2],[37.342486,-6.063572,"Casco Antiguo",2],[37.342563,-6.063694,"Casco Antiguo",2],[37.341567,-6.063718,"Casco Antiguo",2],[37.341669,-6.063783,"Casco Antiguo",2],[37.341907,-6.063902,"Casco Antiguo",2],[37.342011,-6.063954,"Casco Antiguo",2],[37.342193,-6.064052,"Casco Antiguo",2],[37.342429,-6.064177,"Casco Antiguo",2],[37.341614,-6.063883,"Barriada La Pruisiana",0],[37.341715,-6.063939,"Barriada La Pruisiana",0],[37.341795,-6.063981,"Barriada La Pruisiana",0],[37.341966,-6.064067,"Barriada La Pruisiana",0],[37.342152,-6.064158,"Barriada La Pruisiana",0],[37.342242,-6.064211,"Barriada La Pruisiana",0],[37.342331,-6.064253,"Barriada La Pruisiana",0],[37.34262,-6.06379,"Casco Antiguo",2],[37.341376,-6.063547,"Casco Antiguo",2],[37.34127,-6.063456,"Casco Antiguo",2],[37.341316,-6.063743,"Casco Antiguo",2],[37.341242,-6.063686,"Casco Antiguo",2],[37.341175,-6.063615,"Casco Antiguo",2],[37.341014,-6.063494,"Casco Antiguo",2],[37.341072,-6.063731,"Casco Antiguo",2],[37.340784,-6.064279,"Casco Antiguo",2],[37.341052,-6.063599,"Casco Antiguo",2],[37.341002,-6.06371,"Casco Antiguo",2],[37.340712,-6.064256,"Casco Antiguo",2],[37.340641,-6.064374,"Casco Antiguo",2],[37.342168,-6.062387,"Casco Antiguo",2],[37.341918,-6.062146,"Casco Antiguo",2],[37.341847,-6.062085,"Casco Antiguo",2],[37.341886,-6.061993,"Casco Antiguo",2],[37.341946,-6.061964,"Casco Antiguo",2],[37.341996,-6.061781,"Casco Antiguo",2],[37.341276,-6.064691,"Barriada La Pruisiana",0],[37.341727,-6.064835,"Barriada La Pruisiana",0],[37.341278,-6.065625,"Barriada La Pruisiana",0],[37.341364,-6.06542,"Barriada La Pruisiana",0],[37.341704,-6.064987,"Barriada La Pruisiana",0],[37.341743,-6.065006,"Barriada La Pruisiana",0],[37.342132,-6.065312,"Barriada La Pruisiana",0],[37.342413,-6.065484,"Barriada La Pruisiana",0],[37.342551,-6.065489,"Barriada La Pruisiana",0],[37.342065,-6.065679,"Barriada La Pruisiana",0],[37.342158,-6.06574,"Barriada La Pruisiana",0],[37.342201,-6.065771,"Barriada La Pruisiana",0],[37.342266,-6.065804,"Barriada La Pruisiana",0],[37.342319,-6.065839,"Barriada La Pruisiana",0],[37.342358,-6.065868,"Barriada La Pruisiana",0],[37.342032,-6.065587,"Barriada La Pruisiana",0],[37.342087,-6.065621,"Barriada La Pruisiana",0],[37.342383,-6.065812,"Barriada La Pruisiana",0],[37.340882,-6.065873,"Casco Antiguo",2],[37.341429,-6.066324,"Casco Antiguo",2],[37.341634,-6.066453,"Casco Antiguo",2],[37.341766,-6.066512,"Casco Antiguo",2],[37.341287,-6.06674,"Casco Antiguo",2],[37.341339,-6.066778,"Casco Antiguo",2],[37.341399,-6.066807,"Casco Antiguo",2],[37.341457,-6.066838,"Casco Antiguo",2],[37.341511,-6.066874,"Casco Antiguo",2],[37.341553,-6.066927,"Casco Antiguo",2],[37.341589,-6.066948,"Casco Antiguo",2],[37.340539,-6.0658,"Casco Antiguo",2],[37.340508,-6.065868,"Casco Antiguo",2],[37.340477,-6.065934,"Casco Antiguo",2],[37.35559,-6.035034,"Altozano",0],[37.355589,-6.035067,"Altozano",0],[37.355585,-6.035104,"Altozano",0],[37.355636,-6.03518,"Altozano",0],[37.355576,-6.035241,"Altozano",0],[37.35538,-6.035184,"Altozano",0],[37.355447,-6.035123,"Altozano",0],[37.355739,-6.034573,"Altozano",0],[37.355993,-6.034965,"Altozano",0],[37.354561,-6.04023,"Lepanto",0],[37.358698,-6.044247,"Montealto",0],[37.358699,-6.044312,"Montealto",0],[37.3587,-6.04436,"Montealto",0],[37.354094,-6.048824,"Cavaleri",0],[37.354176,-6.048857,"Cavaleri",0],[37.352199,-6.036675,"Alero de Sevilla",0],[37.352265,-6.035495,"Alero de Sevilla",0],[37.352183,-6.035527,"Alero de Sevilla",0],[37.341418,-6.068954,"Casco Antiguo",2],[37.341512,-6.067424,"Casco Antiguo",2],[37.343664,-6.067331,"Casco Antiguo",2],[37.343706,-6.067334,"Casco Antiguo",2],[37.344091,-6.067596,"Casco Antiguo",2],[37.34359,-6.068858,"Casco Antiguo",2],[37.343587,-6.067575,"Casco Antiguo",2],[37.343583,-6.067515,"Casco Antiguo",2],[37.348193,-6.065322,"Hermanas Mirabal, Mariana Pineda y ensanche norte",0],[37.348209,-6.065261,"Hermanas Mirabal, Mariana Pineda y ensanche norte",0],[37.348965,-6.06703,"Hermanas Mirabal, Mariana Pineda y ensanche norte",0],[37.349316,-6.067256,"Hermanas Mirabal, Mariana Pineda y ensanche norte",0],[37.34656,-6.064694,"Casco Antiguo",2],[37.348403,-6.064939,"Hermanas Mirabal, Mariana Pineda y ensanche norte",0],[37.348487,-6.064906,"Hermanas Mirabal, Mariana Pineda y ensanche norte",0],[37.348622,-6.06482,"Hermanas Mirabal, Mariana Pineda y ensanche norte",0],[37.346612,-6.062758,"Casco Antiguo",2],[37.349888,-6.056638,"Hermanas Mirabal, Mariana Pineda y ensanche norte",0],[37.350076,-6.056828,"Hermanas Mirabal, Mariana Pineda y ensanche norte",0],[37.344956,-6.069069,"Camino Peralta",1],[37.345027,-6.069063,"Camino Peralta",1],[37.345924,-6.069281,"Camino Peralta",1],[37.346967,-6.069972,"Camino Peralta",1],[37.344625,-6.068727,"Camino Peralta",1],[37.344871,-6.068202,"Camino Peralta",1],[37.344968,-6.06804,"Camino Peralta",1],[37.345236,-6.067621,"Camino Peralta",1],[37.345443,-6.067099,"Camino Peralta",1],[37.3457,-6.067155,"Camino Peralta",1],[37.346024,-6.067642,"Camino Peralta",1],[37.347351,-6.068868,"Camino Peralta",1],[37.34689,-6.068388,"Camino Peralta",1],[37.347094,-6.068543,"Camino Peralta",1],[37.34527,-6.067903,"Camino Peralta",1],[37.345338,-6.067963,"Camino Peralta",1],[37.345543,-6.068128,"Camino Peralta",1],[37.345625,-6.068175,"Camino Peralta",1],[37.345866,-6.068488,"Camino Peralta",1],[37.346237,-6.068068,"Camino Peralta",1],[37.345865,-6.067074,"Camino Peralta",1],[37.34613,-6.067047,"Camino Peralta",1],[37.346198,-6.067045,"Camino Peralta",1],[37.346764,-6.067001,"Camino Peralta",1],[37.346844,-6.067003,"Camino Peralta",1],[37.347011,-6.066989,"Camino Peralta",1],[37.347192,-6.067427,"Camino Peralta",1],[37.347896,-6.06776,"Camino Peralta",1],[37.346591,-6.068624,"Camino Peralta",1],[37.34662,-6.06853,"Camino Peralta",1],[37.346807,-6.069747,"Camino Peralta",1],[37.347413,-6.068123,"Camino Peralta",1],[37.347497,-6.067944,"Camino Peralta",1],[37.347323,-6.068611,"Camino Peralta",1],[37.347361,-6.068528,"Camino Peralta",1],[37.347404,-6.068434,"Camino Peralta",1],[37.346143,-6.068801,"Camino Peralta",1],[37.346184,-6.068765,"Camino Peralta",1],[37.346267,-6.068698,"Camino Peralta",1],[37.346302,-6.068671,"Camino Peralta",1],[37.346342,-6.068681,"Camino Peralta",1],[37.346318,-6.068728,"Camino Peralta",1],[37.346297,-6.068798,"Camino Peralta",1],[37.346273,-6.068867,"Camino Peralta",1],[37.346058,-6.06891,"Camino Peralta",1],[37.346075,-6.068911,"Camino Peralta",1],[37.346068,-6.068891,"Camino Peralta",1],[37.346209,-6.068973,"Camino Peralta",1],[37.346216,-6.068959,"Camino Peralta",1],[37.346203,-6.068807,"Camino Peralta",1],[37.337709,-6.072116,"Las Calahoyas",0],[37.337649,-6.072083,"Las Calahoyas",0],[37.337597,-6.072079,"Las Calahoyas",0],[37.337547,-6.072071,"Las Calahoyas",0],[37.337374,-6.072038,"Las Calahoyas",0],[37.337044,-6.072001,"Las Calahoyas",0],[37.336896,-6.072022,"Las Calahoyas",0],[37.33686,-6.07202,"Las Calahoyas",0],[37.336825,-6.07202,"Las Calahoyas",0],[37.333352,-6.070381,"Las Tres Barras",1],[37.332986,-6.07035,"Las Tres Barras",1],[37.332652,-6.071278,"Las Tres Barras",1],[37.33329,-6.071331,"Las Tres Barras",1],[37.333351,-6.071337,"Las Tres Barras",1],[37.333469,-6.071345,"Las Tres Barras",1],[37.33357,-6.071347,"Las Tres Barras",1],[37.335016,-6.071591,"Las Tres Barras",1],[37.335095,-6.07161,"Las Tres Barras",1],[37.335358,-6.071681,"Las Tres Barras",1],[37.335574,-6.071766,"Las Tres Barras",1],[37.335544,-6.071877,"Las Tres Barras",1],[37.335058,-6.071752,"Las Tres Barras",1],[37.334867,-6.071707,"Las Tres Barras",1],[37.334792,-6.071702,"Las Tres Barras",1],[37.334413,-6.071633,"Las Tres Barras",1],[37.334301,-6.071625,"Las Tres Barras",1],[37.334227,-6.071611,"Las Tres Barras",1],[37.334121,-6.071594,"Las Tres Barras",1],[37.334045,-6.07158,"Las Tres Barras",1],[37.333865,-6.071551,"Las Tres Barras",1],[37.333744,-6.071537,"Las Tres Barras",1],[37.333675,-6.071518,"Las Tres Barras",1],[37.334739,-6.071655,"Las Tres Barras",1],[37.334164,-6.071567,"Las Tres Barras",1],[37.332573,-6.07142,"Las Tres Barras",1],[37.33221,-6.072678,"Las Tres Barras",1],[37.332186,-6.073008,"Las Tres Barras",1],[37.332078,-6.073331,"Las Tres Barras",1],[37.331887,-6.073849,"Las Tres Barras",1],[37.331821,-6.074002,"Las Tres Barras",1],[37.33177,-6.07414,"Las Tres Barras",1],[37.331619,-6.074582,"Las Tres Barras",1],[37.331524,-6.07495,"Las Tres Barras",1],[37.331517,-6.075036,"Las Tres Barras",1],[37.331449,-6.075411,"Las Tres Barras",1],[37.331402,-6.075787,"Las Tres Barras",1],[37.331352,-6.076256,"Las Tres Barras",1],[37.33128,-6.07653,"Las Tres Barras",1],[37.332016,-6.076689,"Las Tres Barras",1],[37.332197,-6.076711,"Las Tres Barras",1],[37.33249,-6.073021,"Las Tres Barras",1],[37.334454,-6.073115,"Las Tres Barras",1],[37.33242,-6.073205,"Las Tres Barras",1],[37.335647,-6.070627,"Las Tres Barras",1],[37.335542,-6.070946,"Las Tres Barras",1],[37.335438,-6.071292,"Las Tres Barras",1],[37.335412,-6.071379,"Las Tres Barras",1],[37.335363,-6.071491,"Las Tres Barras",1],[37.33535,-6.071591,"Las Tres Barras",1],[37.335237,-6.071869,"Las Tres Barras",1],[37.335081,-6.072409,"Las Tres Barras",1],[37.335027,-6.072545,"Las Tres Barras",1],[37.335009,-6.072627,"Las Tres Barras",1],[37.334892,-6.072979,"Las Tres Barras",1],[37.334873,-6.073064,"Las Tres Barras",1],[37.335093,-6.072236,"Las Tres Barras",1],[37.334955,-6.072677,"Las Tres Barras",1],[37.334798,-6.07347,"Las Tres Barras",1],[37.334799,-6.07372,"Las Tres Barras",1],[37.334796,-6.073853,"Las Tres Barras",1],[37.334803,-6.074407,"Las Tres Barras",1],[37.334803,-6.076385,"Las Tres Barras",1],[37.334773,-6.073786,"Las Tres Barras",1],[37.333994,-6.075534,"Las Tres Barras",1],[37.334076,-6.07468,"Las Tres Barras",1],[37.334074,-6.074604,"Las Tres Barras",1],[37.334069,-6.074427,"Las Tres Barras",1],[37.334151,-6.074437,"Las Tres Barras",1],[37.334203,-6.074444,"Las Tres Barras",1],[37.33283,-6.073769,"Las Tres Barras",1],[37.332806,-6.073985,"Las Tres Barras",1],[37.332181,-6.074821,"Las Tres Barras",1],[37.332119,-6.074806,"Las Tres Barras",1],[37.331869,-6.073971,"Las Tres Barras",1],[37.332588,-6.074011,"Las Tres Barras",1],[37.332265,-6.073961,"Las Tres Barras",1],[37.332207,-6.073955,"Las Tres Barras",1],[37.331951,-6.073905,"Las Tres Barras",1],[37.33361,-6.071993,"Las Tres Barras",1],[37.33363,-6.072855,"Las Tres Barras",1],[37.333916,-6.072618,"Las Tres Barras",1],[37.333954,-6.072636,"Las Tres Barras",1],[37.331284,-6.069608,"Estacada del Marques",0],[37.332659,-6.06961,"Estacada del Marques",0],[37.332698,-6.069333,"Estacada del Marques",0],[37.332904,-6.067902,"Estacada del Marques",0],[37.332906,-6.068451,"Estacada del Marques",0],[37.332879,-6.068662,"Estacada del Marques",0],[37.332844,-6.068965,"Estacada del Marques",0],[37.333307,-6.068643,"Estacada del Marques",0],[37.333102,-6.069614,"Estacada del Marques",0],[37.334504,-6.067937,"Estacada del Marques",0],[37.333754,-6.067698,"Estacada del Marques",0],[37.333932,-6.067736,"Estacada del Marques",0],[37.33443,-6.06783,"Estacada del Marques",0],[37.334631,-6.06787,"Estacada del Marques",0],[37.333578,-6.069474,"Estacada del Marques",0],[37.333727,-6.068271,"Estacada del Marques",0],[37.334206,-6.068363,"Estacada del Marques",0],[37.334033,-6.069719,"Estacada del Marques",0],[37.334118,-6.069513,"Estacada del Marques",0],[37.334114,-6.069558,"Estacada del Marques",0],[37.344908,-6.055923,"Bulevar",3],[37.344047,-6.058371,"Bulevar",3],[37.343675,-6.059069,"Bulevar",3],[37.343748,-6.057926,"Bulevar",3],[37.343077,-6.059166,"Bulevar",3],[37.342549,-6.059853,"Bulevar",3],[37.343003,-6.059086,"Bulevar",3],[37.340782,-6.062582,"Bulevar",3],[37.340364,-6.063107,"Bulevar",3],[37.340287,-6.063246,"Bulevar",3],[37.340098,-6.063626,"Bulevar",3],[37.340336,-6.063443,"Bulevar",3],[37.340201,-6.063706,"Bulevar",3],[37.339752,-6.064601,"Bulevar",3],[37.342689,-6.056433,"Bulevar",3],[37.342884,-6.055169,"Bulevar",3],[37.34232,-6.05632,"Bulevar",3],[37.34068,-6.059053,"Bulevar",3],[37.339537,-6.062581,"Bulevar",3],[37.339514,-6.062795,"Bulevar",3],[37.339439,-6.063361,"Bulevar",3],[37.33941,-6.063582,"Bulevar",3],[37.339354,-6.06383,"Bulevar",3],[37.339315,-6.063967,"Bulevar",3],[37.339294,-6.064041,"Bulevar",3],[37.33926,-6.064191,"Bulevar",3],[37.33924,-6.064268,"Bulevar",3],[37.339197,-6.064426,"Bulevar",3],[37.339074,-6.064807,"Bulevar",3],[37.343649,-6.056829,"Bulevar",3],[37.34333,-6.056619,"Bulevar",3],[37.344194,-6.058086,"Bulevar",3],[37.34408,-6.05798,"Bulevar",3],[37.344038,-6.057944,"Bulevar",3],[37.343754,-6.057512,"Bulevar",3],[37.342335,-6.056557,"Bulevar",3],[37.342315,-6.058216,"Bulevar",3],[37.342343,-6.059444,"Bulevar",3],[37.341572,-6.060584,"Bulevar",3],[37.34153,-6.060512,"Bulevar",3],[37.340633,-6.061,"Bulevar",3],[37.339817,-6.063904,"Bulevar",3],[37.339753,-6.064032,"Bulevar",3],[37.339699,-6.063994,"Bulevar",3],[37.339603,-6.063928,"Bulevar",3],[37.33956,-6.063909,"Bulevar",3],[37.339414,-6.063798,"Bulevar",3],[37.339391,-6.064773,"Bulevar",3],[37.339196,-6.064648,"Bulevar",3],[37.339409,-6.064925,"Bulevar",3],[37.339201,-6.064779,"Bulevar",3],[37.338024,-6.041208,"Parque Periurbano Porzuna",0],[37.339926,-6.042643,"Parque Periurbano Porzuna",0],[37.351316,-6.059987,"Hermanas Mirabal, Mariana Pineda y ensanche norte",0],[37.351313,-6.060303,"Hermanas Mirabal, Mariana Pineda y ensanche norte",0],[37.350881,-6.065375,"Hermanas Mirabal, Mariana Pineda y ensanche norte",0],[37.351851,-6.067877,"Hermanas Mirabal, Mariana Pineda y ensanche norte",0],[37.35184,-6.068005,"Hermanas Mirabal, Mariana Pineda y ensanche norte",0],[37.351837,-6.068068,"Hermanas Mirabal, Mariana Pineda y ensanche norte",0],[37.3517,-6.068772,"Hermanas Mirabal, Mariana Pineda y ensanche norte",0],[37.352589,-6.068921,"Hermanas Mirabal, Mariana Pineda y ensanche norte",0],[37.352642,-6.068922,"Hermanas Mirabal, Mariana Pineda y ensanche norte",0],[37.352761,-6.068915,"Hermanas Mirabal, Mariana Pineda y ensanche norte",0],[37.352776,-6.068514,"Hermanas Mirabal, Mariana Pineda y ensanche norte",0],[37.352724,-6.068514,"Hermanas Mirabal, Mariana Pineda y ensanche norte",0],[37.352704,-6.06851,"Hermanas Mirabal, Mariana Pineda y ensanche norte",0],[37.357168,-6.050254,"Margenes carretera A-86068. Entre Mairena y PISA",0],[37.357266,-6.050336,"Margenes carretera A-86068. Entre Mairena y PISA",0],[37.351065,-6.05407,"Ciudad Expo",0],[37.351196,-6.054156,"Ciudad Expo",0],[37.351669,-6.054029,"Ciudad Expo",0],[37.351989,-6.053538,"Ciudad Expo",0],[37.351964,-6.053967,"Ciudad Expo",0],[37.34275,-6.054727,"Ronda Sur. Carretera A8067",0],[37.342157,-6.05594,"Ronda Sur. Carretera A8067",0],[37.341086,-6.057941,"Ronda Sur. Carretera A8067",0],[37.34717,-6.048091,"Ciudad Expo",0],[37.347113,-6.048088,"Ciudad Expo",0],[37.347651,-6.052537,"Parque Central",0],[37.349136,-6.04158,"Ciudad Aljarafe",0],[37.349163,-6.041561,"Ciudad Aljarafe",0],[37.355049,-6.040526,"Lepanto",0],[37.350135,-6.042515,"Aljarasol / Alboaire",0],[37.349655,-6.035841,"Pinar de Simon Verde",0],[37.347352,-6.047766,"Hacienda Los Olivos",0],[37.347374,-6.047847,"Hacienda Los Olivos",0],[37.347398,-6.047919,"Hacienda Los Olivos",0],[37.343098,-6.053651,"Ronda Sur. Carretera A8067",0],[37.34314,-6.053568,"Ronda Sur. Carretera A8067",0],[37.343268,-6.053324,"Ronda Sur. Carretera A8067",0],[37.343582,-6.052722,"Ronda Sur. Carretera A8067",0],[37.343431,-6.053572,"Ronda Sur. Carretera A8067",0],[37.350848,-6.056644,"Hermanas Mirabal, Mariana Pineda y ensanche norte",0],[37.345149,-6.057279,"Rosales",2],[37.347781,-6.049473,"Ciudad Expo",0],[37.337851,-6.072754,"Las Calahoyas",0]];
 const BARRIOS=[
  ["Las Tres Barras",83,"A","Granado · Árbol del amor"],
  ["Casco Antiguo",66,"A","Granado · Árbol del amor"],
@@ -413,7 +605,7 @@ function renderCalles(filtro=""){
 function renderEspecies(){
   document.getElementById("spGrid").innerHTML=ESPECIES.map((e,i)=>
     `<article class="sp-card" data-tipo="${e.tipo}">
-      <div class="foto"><img src="${e.img}" alt="${e.n}" loading="lazy" onclick="lightbox(this.src,'${e.cap.replace(/'/g,"\\'")}')" title="Clic para ampliar"></div>
+      <div class="foto"><img src="${e.img}" alt="${e.n}" loading="eager" onclick="lightbox(this.src,'${e.cap.replace(/'/g,"\\'")}')" title="Clic para ampliar"></div>
       <div class="sp-body">
         <h3>${e.n}</h3><p class="sci">${e.sci}</p>
         <div class="tags">${e.tags.map(t=>`<span class="tag ${t[0]}">${t[1]}</span>`).join("")}
@@ -470,6 +662,74 @@ window.addEventListener("scroll",()=>{
 },{passive:true});
 
 renderBarrios();renderCalles();renderEspecies();renderMatriz();
+
+/* ================== PRESUPUESTO POR FASE ================== */
+const COSTE={A:[300,430],B:[330,480],C:[380,530]}; // min/max por tipo
+const FASE_BARRIOS={1:["Las Tres Barras","Camino Peralta"],2:["Casco Antiguo","Rosales"],3:["Bulevar","Almendral"]};
+const NOMBRES_FASE={1:"Primera",2:"Segunda",3:"Tercera"};
+function renderPresuFases(){
+  let tN=0,tMin=0,tMax=0;
+  const filas=[1,2,3].map(f=>{
+    const bs=BARRIOS.filter(b=>FASE_BARRIOS[f].includes(b[0]));
+    const n=bs.reduce((s,b)=>s+b[1],0);
+    // mezcla aproximada de tipos dentro de la fase (dominante por nº de huecos)
+    const tipos={};bs.forEach(b=>tipos[b[2]]=(tipos[b[2]]||0)+b[1]);
+    const tiposTxt=Object.entries(tipos).map(([t,v])=>`Tipo ${t} (${Math.round(v/n*100)} %)`).join(" + ");
+    const min=Object.entries(tipos).reduce((s,[t,v])=>s+COSTE[t][0]*v,0);
+    const max=Object.entries(tipos).reduce((s,[t,v])=>s+COSTE[t][1]*v,0);
+    const med=Math.round((min+max)/2);
+    tN+=n;tMin+=min;tMax+=max;
+    return `<tr><td><b>${NOMBRES_FASE[f]} fase</b></td><td>${n}</td><td>${tiposTxt}</td><td>${min.toLocaleString("es-ES")} €</td><td>${max.toLocaleString("es-ES")} €</td><td><b>${med.toLocaleString("es-ES")} €</b></td></tr>`;
+  }).join("");
+  document.getElementById("tbPresuFases").innerHTML=filas;
+  document.getElementById("pfTotal").textContent=tN;
+  document.getElementById("pfMin").textContent=tMin.toLocaleString("es-ES")+" €";
+  document.getElementById("pfMax").textContent=tMax.toLocaleString("es-ES")+" €";
+  document.getElementById("pfMed").textContent=Math.round((tMin+tMax)/2).toLocaleString("es-ES")+" €";
+}
+renderPresuFases();
+
+function imprimeResumen(){
+  document.body.classList.add("pdf-resumen");
+  const limpiar=()=>{document.body.classList.remove("pdf-resumen");window.removeEventListener("afterprint",limpiar);};
+  window.addEventListener("afterprint",limpiar);
+  window.print();
+  setTimeout(limpiar,1500);
+}
+
+/* ================== MAPA LEAFLET ================== */
+const COLORES={1:"#17788a",2:"#c24500",3:"#7a5ea8",0:"#8a9a8a"};
+const Leaflet=window.L || (window.leaflet && (window.leaflet.default || window.leaflet));
+if(!Leaflet) throw new Error("No se pudo cargar Leaflet 1.9.4 desde .leaflet-cache/");
+const mapa=Leaflet.map("mapa",{scrollWheelZoom:true}).setView([37.345,-6.055],13);
+Leaflet.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(mapa);
+PUNTOS.forEach(p=>{
+  Leaflet.circleMarker([p[0],p[1]],{radius:5,color:COLORES[p[3]],weight:1,fillColor:COLORES[p[3]],fillOpacity:.85})
+    .addTo(mapa)
+    .bindPopup(`<b>Alcorque vacío</b><br>Barrio: ${p[2]}<br>Fase propuesta: ${p[3]?NOMBRES_FASE[p[3]]+" fase":"fases posteriores"}`);
+});
+
+/* ================== EXPORTACIONES ================== */
+function guardar(nombre,contenido,mime){
+  const blob=new Blob([contenido],{type:mime});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=nombre;
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),3e3);
+}
+function descarga(fmt){
+  if(fmt==="geojson"){
+    const fc={type:"FeatureCollection",features:PUNTOS.map(p=>({type:"Feature",geometry:{type:"Point",coordinates:[p[1],p[0]]},properties:{barrio:p[2],fase:p[3]||"posterior",especies:(BARRIOS.find(b=>b[0]===p[2])||[,,,""])[3]}}))};
+    guardar("alcorques_vacios_mairena.geojson",JSON.stringify(fc,null,1),"application/geo+json");
+  }else if(fmt==="kml"){
+    const placemarks=PUNTOS.map(p=>`<Placemark><name>Alcorque ${p[2]}</name><description>Barrio: ${p[2]} · Fase: ${p[3]||"posterior"}</description><Point><coordinates>${p[1]},${p[0]},0</coordinates></Point></Placemark>`).join("");
+    guardar("alcorques_vacios_mairena.kml",`<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>Alcorques vacíos Mairena</name>${placemarks}</Document></kml>`,"application/vnd.google-earth.kml+xml");
+  }else if(fmt==="csv"){
+    const filas=["lat,lon,barrio,fase"].concat(PUNTOS.map(p=>`${p[0]},${p[1]},"${p[2]}",${p[3]||"posterior"}`));
+    guardar("alcorques_vacios_mairena.csv",filas.join("\n"),"text/csv;charset=utf-8");
+  }else if(fmt==="especies-csv"){
+    const filas=["barrio,alcorques,tipo,especies_recomendadas"].concat(BARRIOS.map(b=>`"${b[0]}",${b[1]},${b[2]},"${b[3]}"`));
+    guardar("matriz_especies_mairena.csv",filas.join("\n"),"text/csv;charset=utf-8");
+  }
+}
 </script>
 </body>
 </html>
