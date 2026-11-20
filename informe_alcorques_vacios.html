@@ -13,9 +13,8 @@
 <meta name="twitter:title" content="Informe de alcorques vacíos — Mairena del Aljarafe · Manolit∞">
 <meta name="twitter:description" content="Análisis de los alcorques vacíos de Mairena del Aljarafe y propuesta de plantación.">
 <meta name="twitter:image" content="https://sandrow007.github.io/Mairena-el-Elefante-del-clima/og-mairena.jpg">
-<link rel="stylesheet" href=".leaflet-cache/leaflet.css">
-<script src=".leaflet-cache/leaflet.js"></script>
-<script>window.L = window.leaflet && (window.leaflet.default || window.leaflet);</script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <title>Informe de alcorques vacíos — Mairena del Aljarafe · Manolit∞</title>
 <style>
   :root{
@@ -740,7 +739,7 @@ function imprimeResumen(el){const completo=el&&el.dataset&&el.dataset.doc==="com
 /* ================== MAPA LEAFLET ================== */
 const COLORES={1:"#17788a",2:"#c24500",3:"#7a5ea8",0:"#8a9a8a"};
 const Leaflet=window.L || (window.leaflet && (window.leaflet.default || window.leaflet));
-if(!Leaflet) throw new Error("No se pudo cargar Leaflet 1.9.4 desde .leaflet-cache/");
+if(!Leaflet) throw new Error("No se pudo cargar Leaflet 1.9.4 desde unpkg.com.");
 const mapa=Leaflet.map("mapa",{scrollWheelZoom:true}).setView([37.345,-6.055],13);
 Leaflet.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(mapa);
 PUNTOS.forEach(p=>{
