@@ -748,6 +748,14 @@ PUNTOS.forEach(p=>{
     .addTo(mapa)
     .bindPopup(`<b>${IS_EN()?'Empty tree pit':'Alcorque vacío'}</b><br>${IS_EN()?'Neighbourhood':'Barrio'}: ${p[2]}<br>${IS_EN()?'Proposed phase':'Fase propuesta'}: ${nfase(p[3]||0)}`);
 });
+// Recalcular el lienzo de Leaflet al llegar al mapa: necesario si el navegador
+// termina de aplicar el scroll/maquetación después de inicializar la página.
+const refrescaTamanoMapa=()=>requestAnimationFrame(()=>mapa.invalidateSize({pan:false}));
+document.querySelector('nav.tabs a[href="#mapa-sec"]')?.addEventListener('click',()=>setTimeout(refrescaTamanoMapa,250));
+window.addEventListener('hashchange',()=>{if(location.hash==='#mapa-sec')setTimeout(refrescaTamanoMapa,100);});
+window.addEventListener('resize',refrescaTamanoMapa,{passive:true});
+window.addEventListener('pageshow',refrescaTamanoMapa);
+setTimeout(refrescaTamanoMapa,500);
 
 /* ================== EXPORTACIONES ================== */
 function guardar(nombre,contenido,mime){
