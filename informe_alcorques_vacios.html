@@ -44,6 +44,8 @@
   nav.tabs{position:sticky;top:0;z-index:50;background:#fff;border-bottom:1px solid #d8ddd6;display:flex;overflow-x:auto}
   nav.tabs a{flex:1;white-space:nowrap;text-align:center;padding:.75rem .8rem;text-decoration:none;color:var(--ink-soft);font-weight:500;font-size:.88rem;border-bottom:2px solid transparent}
   nav.tabs a:hover,nav.tabs a.on{color:var(--verde-osc);border-bottom-color:var(--verde)}
+  nav.tabs .lang-toggle{flex:0 0 auto;border:0;border-bottom:2px solid transparent;background:#0e3b47;color:#fff;padding:.55rem .8rem;font-weight:700;cursor:pointer}
+  nav.tabs .lang-toggle:hover{background:#17788a}
 
   main{max-width:1100px;margin:0 auto;padding:1.4rem 1.2rem 3.5rem}
   section{margin-top:2.3rem;scroll-margin-top:4rem}
@@ -137,17 +139,29 @@
     footer{padding:1rem .9rem}
   }
   @media print{
-    nav.tabs,#lb,.hero-logo,.pdfbtn{display:none!important}
+    nav.tabs,#lb,.hero-logo,.pdfbtn,.exportes,.buscar,.filtros{display:none!important}
+    body{background:#fff}
+    main{max-width:none;padding:0}
+    section{break-inside:auto;page-break-inside:auto}
+    h2,h3{break-after:avoid;page-break-after:avoid}
+    tr,img,.sp-card,.card,.tbl-wrap,.mat-wrap{break-inside:avoid;page-break-inside:avoid}
+    thead{display:table-header-group}
+    .tbl-wrap,.mat-wrap{overflow:visible}
+    .sp-grid{grid-template-columns:repeat(2,1fr)}
+    a{color:inherit;text-decoration:none}
+    /* ficha de una página */
     body.pdf-resumen>header,body.pdf-resumen>main>section:not(#pdf),body.pdf-resumen>footer,body.pdf-resumen>#lb{display:none!important}
-    body.pdf-resumen main{padding:0;max-width:none}
     body.pdf-resumen #pdf{display:block!important;margin:0}
     body.pdf-resumen #resumenEjecutivo{border:0;padding:0;margin:0}
     body.pdf-resumen #resumenEjecutivo p{margin:.65rem 0}
-    body:not(.pdf-resumen) #pdf{display:none!important}
-    body:not(.pdf-resumen) #plan{display:block!important}
+    body.pdf-resumen #pdf>.lead,body.pdf-resumen #pdf>.pdfbtn{display:none!important}
+    /* informe completo: todas las secciones, sin la ficha duplicada */
+    body.pdf-completo #pdf{display:none!important}
+    body.pdf-completo .hero{padding:1.2rem 0 .8rem}
+    body.pdf-completo main>section{margin-top:1.4rem}
+    body.pdf-resumen .hero,body.pdf-completo .hero{background:#fff;color:#111;border-bottom:2px solid #17788a;padding-left:0;padding-right:0}
+    body.pdf-resumen .hero .sub,body.pdf-resumen .hero .kicker,body.pdf-resumen .hstat .l,body.pdf-completo .hero .sub,body.pdf-completo .hero .kicker,body.pdf-completo .hstat .l{color:#333}
     .card,.sp-card{box-shadow:none;border:1px solid #bbb}
-    .hero{background:#fff;color:#111;border-bottom:2px solid #17788a}
-    .hero .sub,.hero .kicker,.hstat .l{color:#333}
   }
 </style>
 </head>
@@ -188,6 +202,7 @@
 </header>
 
 <nav class="tabs" id="tabs">
+  <button class="lang-toggle" id="lang-toggle" type="button" aria-label="Cambiar idioma / Change language">ES–EN</button>
   <a href="#resumen" class="on">Resumen</a>
   <a href="#barrios">Por barrio</a>
   <a href="#calles">Por calle</a>
@@ -446,9 +461,19 @@
 
 <!-- ============ 14. IMPRESIÓN ============ -->
 <section id="pdf">
-  <h2><span class="num">14</span> Resumen ejecutivo imprimible</h2>
+  <h2><span class="num">14</span> Descargar informe completo en PDF</h2>
+
+  <div class="card" style="display:flex;flex-wrap:wrap;gap:1.2rem;align-items:center">
+    <div style="flex:1 1 320px">
+      <h3 style="color:var(--verde-osc)">Informe completo en PDF</h3>
+      <p style="margin:.45rem 0 0;font-size:.92rem">Informe completo con todas las secciones (resumen, barrios, calles, mapa, especies, presupuesto, impacto, cronograma, mantenimiento, financiación y plan de actuación) en un solo PDF paginado.</p>
+    </div>
+    <button class="pdfbtn" type="button" style="margin:0" data-doc="completo" onclick="imprimeResumen(this)">Imprimir / guardar informe completo como PDF</button>
+  </div>
+
+  <h3 style="color:var(--verde-osc);margin:1.6rem 0 .3rem">Ficha ejecutiva de una página</h3>
   <p class="lead">Pulsa para abrir el diálogo de impresión y elige «Guardar como PDF». Se imprime únicamente la ficha ejecutiva de debajo.</p>
-  <button class="pdfbtn" type="button" onclick="imprimeResumen()">Imprimir / guardar resumen como PDF</button>
+  <button class="pdfbtn" type="button" data-doc="resumen" onclick="imprimeResumen(this)">Imprimir / guardar resumen como PDF</button>
   <div class="card" id="resumenEjecutivo">
     <h3 style="color:var(--verde-osc);margin-bottom:.7rem">Alcorques vacíos — Mairena del Aljarafe</h3>
     <p><b>Diagnóstico.</b> Inventario de 635 alcorques vacíos en 33 barrios y 146 calles. Seis barrios reúnen aproximadamente el 52 % del total; C/ Ciaurriz registra la mayor concentración.</p>
@@ -551,6 +576,12 @@ const JUSTIFICACION={
  B:"Aceras residenciales con espacio suficiente: combinar especies para aportar sombra y evitar concentrar la plantación en una sola especie.",
  C:"Avenidas, plazas y parques: espacio libre para copa y raíz; especies grandes, longevas y sin riego tras el establecimiento."
 };
+const JUSTIF_EN={
+ A:"Narrow pavements and heavy pedestrian traffic: small trees with non-invasive roots and ornamental value (flowers).",
+ B:"Residential pavements with enough space: mix species to provide shade and avoid relying on a single species.",
+ C:"Avenues, squares and parks: open space for crowns and roots; large, long-lived species that need no irrigation once established."
+};
+const HABIT_EN={A:"Narrow pavement / pedestrian area",B:"Wide pavement / residential area",C:"Avenue / square / park"};
 
 /* Especies con las fotos ORIGINALES del cuestionario (inyectadas por el script generador) */
 const ESPECIES=[
@@ -585,24 +616,31 @@ const CLASE={A:"a",B:"b",C:"c"};
 const MAX=Math.max(...BARRIOS.map(b=>b[1]));
 
 /* ================== RENDER ================== */
-const pct=v=>(v/635*100).toFixed(1).replace(".",",")+" %";
+const IS_EN=()=>typeof LANG!=='undefined'&&LANG==='en';
+const TIPO_TXT={get es(){return NOMBRES_TIPO},en:{A:"Narrow pavement / pedestrian area",B:"Wide pavement / residential area",C:"Avenue / square / park"}};
+const horses={es:["Primera","Segunda","Tercera"],en:["Phase 1","Phase 2","Phase 3"]};
+const tipoTxt=t=>IS_EN()?String(t).replace(/^Tipo /,'Type '):'Tipo '+t;
+const num=v=>v.toLocaleString(IS_EN()?'en-GB':'es-ES');
+const pct=v=>(v/635*100).toFixed(1).replace('.',IS_EN()?'.':',')+(IS_EN()?'%':' %');
 
 function renderBarrios(){
+  const especies=t=>{let s=t.replace(/Tipo /g,'Type ');if(IS_EN())s=s.replace(/Almez/g,'Hackberry').replace(/Acebuche/g,'Wild olive').replace(/\u00c1rbol del amor/g,'Judas tree').replace(/Algarrobo/g,'Carob tree').replace(/Granado/g,'Pomegranate').replace(/Encina/g,'Holm oak');return s};
   document.getElementById("tbBarrios").innerHTML=BARRIOS.map((b,i)=>{
     const w=(b[1]/MAX*100).toFixed(1);
     return `<tr class="${i<6?'critico':''}"><td>${i+1}</td><td><b>${b[0]}</b></td><td>${b[1]}</td><td>${pct(b[1])}</td>`
       +`<td style="min-width:140px"><div class="barra-f" style="width:${w}%"></div></td>`
-      +`<td><span class="pill ${CLASE[b[2]]}" title="${NOMBRES_TIPO[b[2]]}">Tipo ${b[2]}</span></td><td>${b[3]}</td></tr>`;
+      +`<td><span class="pill ${CLASE[b[2]]}" title="${TIPO_TXT[IS_EN()?'en':'es'][b[2]]}">${tipoTxt(b[2])}</span></td><td>${especies(b[3])}</td></tr>`;
   }).join("");
 }
 
 function renderCalles(filtro=""){
   const q=filtro.trim().toLowerCase();
   const lista=CALLES.filter(c=>!q||c[0].toLowerCase().includes(q)||c[1].toLowerCase().includes(q));
+  const esp=t=>{if(IS_EN())return t.replace(/Almez/g,'Hackberry').replace(/Acebuche/g,'Wild olive').replace(/\u00c1rbol del amor/g,'Judas tree').replace(/Algarrobo/g,'Carob tree').replace(/Granado/g,'Pomegranate').replace(/Encina/g,'Holm oak').replace(/\/.*/,'');return t};
   document.getElementById("tbCalles").innerHTML=lista.map(c=>
     `<tr><td><b>${c[0]}</b></td><td style="font-size:.85rem;color:var(--ink-soft)">${c[1]}</td><td><b>${c[2]}</b></td>`
-    +`<td><span class="pill ${CLASE[c[3]]}" title="${NOMBRES_TIPO[c[3]]}">${c[3]}</span></td><td>${c[4]}</td></tr>`
-  ).join("")||`<tr><td colspan="5" style="text-align:center;color:var(--ink-soft)">Sin resultados para «${filtro}»</td></tr>`;
+    +`<td><span class="pill ${CLASE[c[3]]}" title="${TIPO_TXT[IS_EN()?'en':'es'][c[3]]}">${tipoTxt(c[3])}</span></td><td>${esp(c[4])}</td></tr>`
+  ).join("")||`<tr><td colspan="5" style="text-align:center;color:var(--ink-soft)">${IS_EN()?'No results for':'Sin resultados para'} «${filtro}»</td></tr>`;
   document.getElementById("nCalles").textContent=lista.length;
 }
 
@@ -613,7 +651,7 @@ function renderEspecies(){
       <div class="sp-body">
         <h3>${e.n}</h3><p class="sci">${e.sci}</p>
         <div class="tags">${e.tags.map(t=>`<span class="tag ${t[0]}">${t[1]}</span>`).join("")}
-        <span class="tag t-sh">Tipo ${e.tipo}</span></div>
+        <span class="tag t-sh">${tipoTxt(e.tipo)}</span></div>
         <p style="font-size:.92rem">${e.d}</p>
         <div class="sp-donde">${e.donde}</div>
       </div>
@@ -622,9 +660,10 @@ function renderEspecies(){
 
 function renderMatriz(f="*"){
   const lista=BARRIOS.map((b,i)=>({b,i})).filter(x=>f==="*"||x.b[2]===f);
+  const esp=t=>{if(IS_EN())return t.replace(/Almez/g,'Hackberry').replace(/Acebuche/g,'Wild olive').replace(/\u00c1rbol del amor/g,'Judas tree').replace(/Algarrobo/g,'Carob tree').replace(/Granado/g,'Pomegranate').replace(/Encina/g,'Holm oak');return t};
   document.getElementById("tbMatriz").innerHTML=lista.map(({b,i})=>
-    `<tr><td><b>${b[0]}</b></td><td>${b[1]}</td><td><span class="pill ${CLASE[b[2]]}">${NOMBRES_TIPO[b[2]]}</span></td>`
-    +`<td>${b[3]}</td><td style="font-size:.85rem;color:var(--ink-soft)">${JUSTIFICACION[b[2]]}</td></tr>`).join("");
+    `<tr><td><b>${b[0]}</b></td><td>${b[1]}</td><td><span class="pill ${CLASE[b[2]]}">${TIPO_TXT[IS_EN()?'en':'es'][b[2]]}</span></td>`
+    +`<td>${esp(b[3])}</td><td style="font-size:.85rem;color:var(--ink-soft)">${IS_EN()?JUSTIF_EN[b[2]]:JUSTIFICACION[b[2]]}</td></tr>`).join("");
 }
 
 /* ================== INTERACCIÓN ================== */
@@ -671,6 +710,9 @@ renderBarrios();renderCalles();renderEspecies();renderMatriz();
 const COSTE={A:[300,430],B:[330,480],C:[380,530]}; // min/max por tipo
 const FASE_BARRIOS={1:["Las Tres Barras","Camino Peralta"],2:["Casco Antiguo","Rosales"],3:["Bulevar","Almendral"]};
 const NOMBRES_FASE={1:"Primera",2:"Segunda",3:"Tercera"};
+/* LANG se define en el script de idioma; el mapa y las tablas lo consultan para no mezclar idiomas */
+const NFASE_EN={1:"Phase 1",2:"Phase 2",3:"Phase 3"};
+const nfase=f=>IS_EN()?(NFASE_EN[f]||'Later phases'):NOMBRES_FASE[f]+" fase";
 function renderPresuFases(){
   let tN=0,tMin=0,tMax=0;
   const filas=[1,2,3].map(f=>{
@@ -678,28 +720,22 @@ function renderPresuFases(){
     const n=bs.reduce((s,b)=>s+b[1],0);
     // mezcla aproximada de tipos dentro de la fase (dominante por nº de huecos)
     const tipos={};bs.forEach(b=>tipos[b[2]]=(tipos[b[2]]||0)+b[1]);
-    const tiposTxt=Object.entries(tipos).map(([t,v])=>`Tipo ${t} (${Math.round(v/n*100)} %)`).join(" + ");
+    const tiposTxt=Object.entries(tipos).map(([t,v])=>`${tipoTxt(t)} (${Math.round(v/n*100)} %)`).join(" + ");
     const min=Object.entries(tipos).reduce((s,[t,v])=>s+COSTE[t][0]*v,0);
     const max=Object.entries(tipos).reduce((s,[t,v])=>s+COSTE[t][1]*v,0);
     const med=Math.round((min+max)/2);
     tN+=n;tMin+=min;tMax+=max;
-    return `<tr><td><b>${NOMBRES_FASE[f]} fase</b></td><td>${n}</td><td>${tiposTxt}</td><td>${min.toLocaleString("es-ES")} €</td><td>${max.toLocaleString("es-ES")} €</td><td><b>${med.toLocaleString("es-ES")} €</b></td></tr>`;
+    return `<tr><td><b>${nfase(f)}</b></td><td>${n}</td><td>${tiposTxt}</td><td>${num(min)} €</td><td>${num(max)} €</td><td><b>${num(med)} €</b></td></tr>`;
   }).join("");
   document.getElementById("tbPresuFases").innerHTML=filas;
   document.getElementById("pfTotal").textContent=tN;
-  document.getElementById("pfMin").textContent=tMin.toLocaleString("es-ES")+" €";
-  document.getElementById("pfMax").textContent=tMax.toLocaleString("es-ES")+" €";
-  document.getElementById("pfMed").textContent=Math.round((tMin+tMax)/2).toLocaleString("es-ES")+" €";
+  document.getElementById("pfMin").textContent=num(tMin)+" €";
+  document.getElementById("pfMax").textContent=num(tMax)+" €";
+  document.getElementById("pfMed").textContent=num(Math.round((tMin+tMax)/2))+" €";
 }
 renderPresuFases();
 
-function imprimeResumen(){
-  document.body.classList.add("pdf-resumen");
-  const limpiar=()=>{document.body.classList.remove("pdf-resumen");window.removeEventListener("afterprint",limpiar);};
-  window.addEventListener("afterprint",limpiar);
-  window.print();
-  setTimeout(limpiar,1500);
-}
+function imprimeResumen(el){const completo=el&&el.dataset&&el.dataset.doc==="completo";document.body.classList.remove("pdf-resumen","pdf-completo");document.body.classList.add(completo?"pdf-completo":"pdf-resumen");const limpiar=()=>{document.body.classList.remove("pdf-resumen","pdf-completo");window.removeEventListener("afterprint",limpiar);};window.addEventListener("afterprint",limpiar);window.print();setTimeout(limpiar,1500);}
 
 /* ================== MAPA LEAFLET ================== */
 const COLORES={1:"#17788a",2:"#c24500",3:"#7a5ea8",0:"#8a9a8a"};
@@ -710,7 +746,7 @@ Leaflet.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:
 PUNTOS.forEach(p=>{
   Leaflet.circleMarker([p[0],p[1]],{radius:5,color:COLORES[p[3]],weight:1,fillColor:COLORES[p[3]],fillOpacity:.85})
     .addTo(mapa)
-    .bindPopup(`<b>Alcorque vacío</b><br>Barrio: ${p[2]}<br>Fase propuesta: ${p[3]?NOMBRES_FASE[p[3]]+" fase":"fases posteriores"}`);
+    .bindPopup(`<b>${IS_EN()?'Empty tree pit':'Alcorque vacío'}</b><br>${IS_EN()?'Neighbourhood':'Barrio'}: ${p[2]}<br>${IS_EN()?'Proposed phase':'Fase propuesta'}: ${nfase(p[3]||0)}`);
 });
 
 /* ================== EXPORTACIONES ================== */
@@ -735,5 +771,377 @@ function descarga(fmt){
   }
 }
 </script>
+<script>
+(function(){
+  const T=window.__mairenaBD=window.MAI_ES_EN={
+    "Distribución por barrio":"Distribution by neighbourhood",
+    "Detalle por calle":"Street-by-street details",
+    "Mapa geolocalizado de los 635 alcorques":"Map of all 635 geolocated tree pits",
+    "Especies incluidas en el cuestionario":"Species featured in the survey",
+    "Matriz barrio → tipo → especie recomendada":"Neighbourhood → type → recommended species matrix",
+    "Presupuesto orientativo en euros":"Indicative budget in euros",
+    "Beneficios potenciales e indicadores":"Potential benefits and indicators",
+    "Cronograma propuesto (2027–2029)":"Proposed timeline (2027–2029)",
+    "Mantenimiento y responsable":"Maintenance and responsibility",
+    "Vías de financiación a estudiar":"Potential funding sources to explore",
+    "Propuesta de actuación":"Action proposal",
+    "Descargar informe completo en PDF":"Download the full report as PDF",
+    "Resumen ejecutivo imprimible":"Printable executive summary",
+    "Diagnóstico. Inventario de 635 alcorques vacíos en 33 barrios y 146 calles. Seis barrios reúnen aproximadamente el 52 % del total; C/ Ciaurriz registra la mayor concentración.":"Assessment. Inventory of 635 empty tree pits across 33 neighbourhoods and 146 streets. Six neighbourhoods account for roughly 52% of the total; C/ Ciaurriz has the highest concentration.",
+    "Propuesta. Plantación gradual por fases, selección de especies adaptadas al clima del Aljarafe y verificación previa de cada hueco (servicios enterrados, espacio, estado y accesibilidad).":"Proposal. Phased planting, species suited to the Aljarafe climate, and a check of every pit beforehand (underground utilities, space, condition and access).",
+    "Presupuesto. Estimación preliminar en euros: árbol, apertura/acondicionamiento, plantación y riego de establecimiento. Las horquillas deben sustituirse por precios unitarios contrastados y proyecto técnico antes de licitar.":"Budget. Preliminary estimate in euros for the tree, excavation/preparation, planting and establishment watering. Replace the ranges with verified unit prices and a technical design before tendering.",
+    "Seguimiento. Riego y revisión durante los primeros veranos, reposición de marras y recepción por Parques y Jardines; financiación externa solo si existe convocatoria y elegibilidad confirmadas.":"Monitoring. Watering and inspections during the first summers, replacement of failed trees, and acceptance by Parks and Gardens; external funding only if an open call and eligibility are confirmed.",
+    "Datos abiertos. Las coordenadas se pueden descargar como GeoJSON, KML y CSV para incorporarlas a un SIG municipal.":"Open data. Coordinates can be downloaded as GeoJSON, KML and CSV for use in a municipal GIS.",
+    "4 Mapa geolocalizado de los 635 alcorques":"Map of all 635 geolocated tree pits",
+    "Riego y seguimiento hasta verano 2030":"Watering and monitoring until summer 2030",
+    "Riego y seguimiento hasta verano 2031":"Watering and monitoring until summer 2031",
+    "Riego y seguimiento hasta verano 2032":"Watering and monitoring until summer 2032",
+    "6 Matriz barrio → tipo → especie recomendada":"Neighbourhood → type → recommended species matrix",
+    "Establecimiento":"Establishment",
+    "El árbol más emblemático de Andalucía. Copa densa y perenne, gran sombra. Refugio y alimento para decenas de especies. Crece lentamente pero vive siglos.":"Andalusia’s most emblematic tree, with a dense evergreen crown and generous shade. It shelters and feeds many species; it grows slowly but lives for centuries.",
+    "Porte pequeño, ideal para aceras estrechas. Flores rojas vistosas en verano y frutos en otoño. Muy adaptado al clima semiárido andaluz. Gran resistencia a la sequía.":"A small tree ideal for narrow pavements. Showy red flowers in summer and fruit in autumn. Well adapted to Andalusia’s semi-arid climate and highly drought-resistant.",
+    "Árbol perenne con copa densa. No necesita riego una vez establecido. Sus vainas son alimento para fauna y ganado. Especie emblemática del paisaje mediterráneo andaluz.":"An evergreen tree with a dense crown. It needs no irrigation once established. Its pods feed wildlife and livestock; it is emblematic of the Andalusian Mediterranean landscape.",
+    "15 Vías de financiación a estudiar":"Potential funding sources to explore",
+    "Diputación de Sevilla — planes provinciales de cooperación e inversión municipal":"Seville Provincial Council — provincial cooperation and municipal investment programmes",
+    "PFEA (Programa de Fomento del Empleo Agrario)":"PFEA (Agricultural Employment Promotion Programme)",
+    "Fundación Biodiversidad / MITECO y fondos UE":"Biodiversity Foundation / MITECO and EU funds",
+    "Riego de establecimiento los 2–3 primeros veranos incluso en especies \"sin riego\".":"Water during the first 2–3 summers, even for species described as “no irrigation”.",
+    "Acerca del informe":"About the report",
+    "Volver al mapa de huecos":"Back to the tree-pit map",
+    "1 Resumen ejecutivo":"Executive summary",
+    "2 Distribución por barrio":"Distribution by neighbourhood",
+    "3 Detalle por calle":"Street-by-street details",
+    "5 Especies incluidas en el cuestionario":"Species featured in the survey",
+    "7 Presupuesto orientativo en euros":"Indicative budget in euros",
+    "8 Beneficios potenciales e indicadores":"Potential benefits and indicators",
+    "9 Cronograma propuesto (2027–2029)":"Proposed timeline (2027–2029)",
+    "10 Mantenimiento y responsable":"Maintenance and responsibility",
+    "11 Vías de financiación a estudiar":"Potential funding sources to explore",
+    "13 Propuesta de actuación":"Action proposal",
+    "14 Descargar informe completo en PDF":"Download the full report as PDF",
+    "Informe completo en PDF":"Full report as PDF",
+    "Ficha ejecutiva de una página":"One-page executive summary",
+    "Enlaces oficiales:":"Official links:",
+    "Diagnóstico. Inventario de 635 alcorques vacíos en 33 barrios y 146 calles. Seis barrios reúnen aproximadamente el 52 % del total; C/ Ciaurriz registra la mayor concentración.":"Assessment. Inventory of 635 empty tree pits across 33 neighbourhoods and 146 streets. Six neighbourhoods account for roughly 52% of the total; C/ Ciaurriz has the highest concentration.",
+    "Propuesta. Plantación gradual por fases, selección de especies adaptadas al clima del Aljarafe y verificación previa de cada hueco (servicios enterrados, espacio, estado y accesibilidad).":"Proposal. Phased planting, species suited to the Aljarafe climate, and a check of every pit beforehand (underground utilities, space, condition and access).",
+    "Presupuesto. Estimación preliminar en euros: árbol, apertura/acondicionamiento, plantación y riego de establecimiento. Las horquillas deben sustituirse por precios unitarios contrastados y proyecto técnico antes de licitar.":"Budget. Preliminary estimate in euros for the tree, excavation/preparation, planting and establishment watering. The ranges must be replaced by verified unit prices and a technical design before tendering.",
+    "Seguimiento. Riego y revisión durante los primeros veranos, reposición de marras y recepción por Parques y Jardines; financiación externa solo si existe convocatoria y elegibilidad confirmadas.":"Monitoring. Watering and inspections during the first summers, replacement of failed trees, and acceptance by Parks and Gardens; external funding only if an open call and eligibility are confirmed.",
+    "Datos abiertos. Las coordenadas se pueden descargar como GeoJSON, KML y CSV para incorporarlas a un SIG municipal.":"Open data. The coordinates can be downloaded as GeoJSON, KML and CSV for use in a municipal GIS.",
+    "Lectura clave:":"Key takeaway:",
+    "Top 6 barrios — el 52 % del problema":"Top 6 neighbourhoods — 52% of the shortfall",
+    "Bulevar":"Bulevar",
+    "Pomegranate · Judas tree":"Pomegranate · Judas tree",
+    "Hackberry + Pomegranate (por tramos)":"Hackberry + Pomegranate (by street section)",
+    "Establecimiento":"Establishment",
+    "Alcorques vacíos":"Empty tree pits",
+    "alcorques vacíos":"empty tree pits",
+    "alcorque vacío":"empty tree pit",
+    "plantación":"planting",
+    "Avenida / plaza / parque":"Avenue / square / park",
+    "Tipo A":"Type A",
+    "Tipo B":"Type B",
+    "Tipo C":"Type C",
+    "Las tres fases comprenden 330 de los 635 alcorques. El total dinámico de esta tabla usa costes por tipo de espacio y no debe confundirse con la hipótesis independiente de 500 € netos/unidad (317.500 € netos; 384.175 € con IVA al 21 % para 635 huecos). Ambas son referencias preliminares: contrastar alcances, precios y cantidades con visitas, mediciones y ofertas locales antes de aprobar o licitar.":"The three phases cover 330 of the 635 tree pits. The dynamic total in this table uses costs by space type and should not be confused with the separate assumption of €500 net per unit (€317,500 net; €384,175 including 21% VAT for 635 pits). Both are preliminary references: confirm scope, prices and quantities through site visits, measurements and local quotations before approval or tendering.",
+    "Importante:":"Important:",
+    "Los puntos del inventario fueron facilitados por Antonio José Sánchez Almendro.":"The inventory points were provided by Antonio José Sánchez Almendro.",
+    "El mapa 3D de Mairena del Aljarafe es un documento independiente.":"The Mairena del Aljarafe 3D map is a separate document.",
+    "Diputación de Sevilla":"Seville Provincial Council",
+    "PFEA":"PFEA",
+    "Fases posteriores (resto de barrios)":"Later phases (other neighbourhoods)",
+    "Plan de riegos; ajustar a agua, distancia, frecuencia y coste del contrato municipal.":"Watering plan; adjust for water availability, distance, frequency and municipal contract costs.",
+    "Mostrar el informe en español":"Show the report in Spanish",
+    "Informe completo con todas las secciones (resumen, barrios, calles, mapa, especies, presupuesto, impacto, cronograma, mantenimiento, financiación y plan de actuación) en un solo PDF paginado.":"Full report with every section (overview, neighbourhoods, streets, map, species, budget, impact, timeline, maintenance, funding and action plan) in a single paginated PDF.",
+    "Informe de alcorques vacíos — Mairena del Aljarafe · Manolit∞":"Empty Tree Pit Report — Mairena del Aljarafe · Manolit∞",
+    "Proyecto Manolit∞ · Mairena del Aljarafe":"Manolit∞ Project · Mairena del Aljarafe",
+    "Informe de alcorques vacíos y propuesta de plantación":"Empty Tree Pit Report and Planting Proposal",
+    "Análisis completo de los 635 alcorques vacíos del inventario municipal: dónde están, cómo se distribuyen por barrio y calle, y qué especie del cuestionario ciudadano conviene plantar en cada uno, con su justificación técnica.":"A complete analysis of the 635 empty tree pits in the municipal inventory: where they are, how they are distributed by neighbourhood and street, and which species from the community survey is best suited to each pit, with a technical rationale.",
+    "alcorques vacíos":"empty tree pits",
+    "barrios afectados":"neighbourhoods affected",
+    "calles con huecos":"streets with empty pits",
+    "tipos de plantación":"planting types",
+    "especies propuestas":"proposed species",
+    "Resumen":"Overview",
+    "Por barrio":"By neighbourhood",
+    "Por calle":"By street",
+    "Mapa":"Map",
+    "Especies":"Species",
+    "Recomendaciones":"Recommendations",
+    "Impacto":"Impact",
+    "Cronograma":"Timeline",
+    "Mantenimiento":"Maintenance",
+    "Financiación":"Funding",
+    "Plan de actuación":"Action plan",
+    "Imprimir / PDF":"Print / PDF",
+    "alcorques vacíos":"empty tree pits","barrios afectados":"neighbourhoods affected","calles con huecos":"streets with empty pits","tipos de plantación":"planting types","especies propuestas":"proposed species",
+    "Resumen ejecutivo":"Executive summary",
+    "El inventario municipal registra 635 alcorques vacíos repartidos en 33 barrios y 146 calles. Seis barrios concentran más de la mitad del déficit, y una única calle (C/ Ciaurriz) acumula 47 huecos. La propuesta asigna a cada barrio un tipo de plantación según el espacio real disponible.":"The municipal inventory records 635 empty tree pits across 33 neighbourhoods and 146 streets. Six neighbourhoods account for more than half of the shortfall, and a single street (C/ Ciaurriz) has 47 empty pits. The proposal assigns a planting type to each neighbourhood based on the space actually available.",
+    "Top 6 barrios — el 52 % del problema":"Top 6 neighbourhoods — 52% of the shortfall",
+    "Lectura clave:":"Key takeaway:",
+    "priorizar 3 expedientes de plantación (Tres Barras + Camino Peralta, Casco Antiguo + Rosales, Bulevar + Almendral) resuelve el 52 % de los alcorques vacíos del municipio con la mínima burocracia.":"Prioritising three planting projects (Tres Barras + Camino Peralta, Casco Antiguo + Rosales, Bulevar + Almendral) would address 52% of the municipality’s empty tree pits with minimal administration.",
+    "Distribución por barrio":"Distribution by neighbourhood",
+    "Tabla ordenable y con barra proporcional. El Tipo A agrupa aceras estrechas, el Tipo B aceras anchas residenciales y el Tipo C avenidas, plazas y parques.":"Sortable table with proportional bars. Type A covers narrow pavements, Type B wide residential pavements, and Type C avenues, squares and parks.",
+    "Barrio":"Neighbourhood",
+    "Alcorques":"Tree pits",
+    "% del total":"% of total",
+    "Proporción":"Share",
+    "Tipo":"Type",
+    "Detalle por calle":"Street-by-street details",
+    "Las 30 mayores concentraciones. Usa el buscador para localizar tu calle entre las 146 registradas.":"The 30 largest concentrations. Use the search box to find your street among the 146 recorded streets.",
+    "Buscar calle (por ejemplo, Ciaurriz o Pinsapo)":"Search streets (e.g. Ciaurriz or Pinsapo)",
+    "Calle":"Street",
+    "Barrio(es)":"Neighbourhood(s)",
+    "Especies recomendadas":"Recommended species",
+    "Mostrando 30 de 30 calles destacadas (las 30 mayores concentraciones del inventario).":"Showing 30 of 30 featured streets (the 30 largest concentrations in the inventory).",
+    "Mapa geolocalizado de los 635 alcorques":"Map of all 635 geolocated tree pits",
+    "Cada punto es un alcorque vacío del inventario municipal, con su posición real (fuentes: inventario de arbolado, OSM y Catastro). Coloreado por fase de plantación propuesta. Haz clic en un punto para ver su barrio y fase.":"Each point marks an empty tree pit in the municipal inventory, at its recorded location (sources: tree inventory, OSM and Cadastre). Colours indicate the proposed planting phase. Click a point to see its neighbourhood and phase.",
+    "1ª fase — Tres Barras + Camino Peralta":"Phase 1 — Tres Barras + Camino Peralta",
+    "2ª fase — Casco Antiguo + Rosales":"Phase 2 — Casco Antiguo + Rosales",
+    "3ª fase — Bulevar + Almendral":"Phase 3 — Bulevar + Almendral",
+    "Fases posteriores (resto de barrios)":"Later phases (other neighbourhoods)",
+    "Especies incluidas en el cuestionario":"Species featured in the survey",
+    "Son las mismas especies y las mismas fotografías del cuestionario ciudadano (abrir el cuestionario). Haz clic en cualquier foto para ampliarla.":"These are the same species and photographs as in the community survey (open the survey). Click any photo to enlarge it.",
+    "abrir el cuestionario":"open the survey",
+    "Consideraciones para la plantación:":"Planting considerations:",
+    "Verificación previa obligatoria de cada hueco (servicios subterráneos, accesos, estado actual).":"Every pit must be checked beforehand (underground utilities, access and current condition).",
+    "Alternar especies dentro de cada calle: el inventario ya tiene el 19 % concentrado en naranjo amargo.":"Mix species along each street: 19% of the current inventory is already concentrated in bitter orange.",
+    "Evitar ailanto (invasor) y robinia (rebrotes) en nuevas plantaciones.":"Avoid tree of heaven (invasive) and black locust (root suckers) in new plantings.",
+    "Matriz barrio → tipo → especie recomendada":"Neighbourhood → type → recommended species matrix",
+    "Asignación completa y justificada para los 33 barrios. Filtra por tipo de espacio:":"Complete, justified assignments for all 33 neighbourhoods. Filter by space type:",
+    "Todos (33)":"All (33)",
+    "Tipo A — acera estrecha":"Type A — narrow pavement",
+    "Tipo B — acera ancha":"Type B — wide pavement",
+    "Tipo C — avenida o parque":"Type C — avenue or park",
+    "Espacio predominante":"Typical space",
+    "Justificación":"Rationale",
+    "Estimación preliminar en euros (€), con horquillas de trabajo para planificar; no es tarifa oficial ni precio de adjudicación. Incluye suministro, plantación y establecimiento. Hay que contrastarla con precios unitarios locales y ofertas antes de aprobar el proyecto. Costes sin IVA en el cuadro y total con IVA estimado al 21 % indicado aparte.":"Preliminary estimate in euros (€), with planning ranges; this is neither an official rate nor a contract price. It includes supply, planting and establishment. Check against local unit prices and quotations before approving the project. Table costs exclude VAT; the estimated total including 21% VAT is shown separately.",
+    "Partida por árbol":"Item per tree",
+    "Rango neto estimado":"Estimated net range",
+    "Hipótesis":"Assumptions",
+    "Árbol de vivero (calibre y especie adecuados)":"Nursery tree (suitable size and species)",
+    "Rango de planificación; confirmar especie, calibre, cepellón y transporte con viveros.":"Planning range; confirm species, size, root ball and delivery with nurseries.",
+    "Apertura / saneado / acondicionamiento del alcorque":"Excavation / repair / preparation of the tree pit",
+    "Depende de pavimento, volumen de suelo, residuos y servicios enterrados.":"Depends on paving, soil volume, waste and underground utilities.",
+    "Plantación, tutorado, protecciones y acolchado":"Planting, staking, guards and mulch",
+    "Mano de obra, tutores y materiales; variar por accesibilidad.":"Labour, stakes and materials; costs vary with access.",
+    "Riego de establecimiento y revisiones (2–3 veranos)":"Establishment watering and inspections (2–3 summers)",
+    "Plan de riegos; ajustar a agua, distancia, frecuencia y coste del contrato municipal.":"Watering plan; adjust for water availability, distance, frequency and municipal contract costs.",
+    "Total orientativo por alcorque":"Indicative total per tree pit",
+    "Sin reparaciones extraordinarias de redes ni reposición de pavimento extenso.":"Excludes extraordinary utility repairs and extensive paving replacement.",
+    "Para dimensionar la partida se muestra una hipótesis de 500 € netos por unidad (605 € con IVA al 21 %). No es tarifa observada; el presupuesto contractual debe basarse en mediciones, costes indirectos, seguridad y salud, gastos generales, beneficio industrial e IVA según proceda.":"For budget planning, an assumption of €500 net per unit (€605 including 21% VAT) is shown. This is not an observed rate; the contract budget must be based on measurements, overheads, health and safety, general expenses, contractor profit and applicable VAT.",
+    "La tabla siguiente reparte una segunda hipótesis de coste por tipología de espacio (A: 300–430 €/ud; B: 330–480 €/ud; C: 380–530 €/ud, netos). La mezcla por fase se estima con el tipo asignado a cada barrio y su número de alcorques; no es una medición de proyecto ni una oferta. Se muestra el punto medio del rango como referencia y no se añade IVA.":"The following table distributes a second cost assumption by space type (A: €300–430/unit; B: €330–480/unit; C: €380–530/unit, net). The mix per phase is estimated from each neighbourhood’s assigned type and number of tree pits; it is not a project measurement or quotation. The midpoint of each range is shown for reference, excluding VAT.",
+    "Fase prioritaria":"Priority phase",
+    "N.º alcorques":"No. of tree pits",
+    "Mezcla estimada":"Estimated mix",
+    "Mínimo neto":"Net minimum",
+    "Máximo neto":"Net maximum",
+    "Punto medio":"Midpoint",
+    "Total 3 fases":"Total for 3 phases",
+    "Estimación agregada":"Combined estimate",
+    "Importante:":"Important:",
+    "las tres fases comprenden 330 de los 635 alcorques. El total dinámico de esta tabla usa costes por tipo de espacio y no debe confundirse con la hipótesis independiente de 500 € netos/unidad (317.500 € netos; 384.175 € con IVA al 21 % para 635 huecos). Ambas son referencias preliminares: contrastar alcances, precios y cantidades con visitas, mediciones y ofertas locales antes de aprobar o licitar.":"The three phases cover 330 of the 635 tree pits. The dynamic total in this table uses costs by space type and should not be confused with the separate assumption of €500 net per unit (€317,500 net; €384,175 including 21% VAT for 635 pits). Both are preliminary references: confirm scope, prices and quantities through site visits, measurements and local quotations before approval or tendering.",
+    "Beneficios potenciales e indicadores":"Potential benefits and indicators",
+    "No es riguroso asignar ahora una cifra cerrada de m² de sombra, grados de enfriamiento o toneladas de CO₂: depende de especie, calibre, supervivencia, suelo y copa adulta. Para el expediente, se propone medir y modelar esos indicadores tras definir especies, con datos de copa y supervivencia; no se confunden proyecciones con resultados garantizados.":"It would not be rigorous to assign fixed figures now for shade area, cooling or tonnes of CO₂: these depend on species, size, survival, soil and mature crown. Once species are selected, the project should measure and model these indicators using crown and survival data; projections must not be presented as guaranteed outcomes.",
+    "Indicador a evaluar":"Indicator to assess",
+    "Cómo calcular / verificar":"How to calculate / verify",
+    "Momento":"Timing",
+    "Sombra proyectada (m²)":"Projected shade (m²)",
+    "Proyección de copa por especie y edad, evitando sumar solapes; inventario GIS de copas.":"Crown projection by species and age, avoiding overlap; GIS crown inventory.",
+    "Línea base y años 5, 10 y 15":"Baseline and years 5, 10 and 15",
+    "Temperatura superficial / confort térmico":"Surface temperature / thermal comfort",
+    "Medición comparable bajo copa y en superficie expuesta (hora, fecha y meteorología controladas); no interpretar como enfriamiento del aire.":"Comparable measurements under the crown and on exposed ground (control time, date and weather); do not interpret as air cooling.",
+    "Antes y después de la plantación; verano":"Before and after planting; summer",
+    "CO₂ capturado y almacenado":"CO₂ captured and stored",
+    "Modelo de arbolado urbano (p. ej. i-Tree Eco) con especie, diámetro, supervivencia y crecimiento locales.":"Urban tree model (e.g. i-Tree Eco) using local species, diameter, survival and growth data.",
+    "Actualizar cada 3–5 años":"Update every 3–5 years",
+    "Supervivencia y riego":"Survival and watering",
+    "Árboles vivos, marras, litros/aporte y coste por campaña.":"Live trees, replacements, litres applied and cost per season.",
+    "Semestral durante 3 años":"Twice yearly for 3 years",
+    "Las cifras de impacto deben salir de un método reproducible y una línea base. Hasta entonces se publican como indicadores a estimar, no como promesas cuantificadas.":"Impact figures must come from a reproducible method and baseline. Until then, publish them as indicators to be estimated, not quantified promises.",
+    "Cronograma propuesto (2027–2029)":"Proposed timeline (2027–2029)",
+    "Fechas de planificación sujetas a aprobación y licitación. Próxima ventana de plantación: otoño–invierno 2027/28; para especies y formatos aptos de raíz desnuda, concentrar plantación durante dormancia, evitando heladas, calor y suelo encharcado.":"Planning dates are subject to approval and tendering. The next planting window is autumn–winter 2027/28; for bare-root species and sizes, concentrate planting during dormancy, avoiding frost, heat and waterlogged soil.",
+    "Fase":"Phase",
+    "Preparación y proyecto":"Preparation and design",
+    "Contratación / verificación":"Procurement / verification",
+    "Plantación recomendada":"Recommended planting",
+    "Riego y seguimiento hasta verano":"Watering and monitoring until summer",
+    "Condición:":"Condition:",
+    "calendario indicativo, no fecha aprobada. No presentar como vigente la ventana 2026–27, ya pasada.":"Indicative schedule, not an approved date. Do not present the 2026–27 window, which has passed, as current.",
+    "Mantenimiento y responsable":"Maintenance and responsibility",
+    "Tarea":"Task",
+    "Frecuencia orientativa":"Indicative frequency",
+    "Responsable propuesto":"Proposed owner",
+    "Control":"Monitoring",
+    "Riego de establecimiento":"Establishment watering",
+    "Plan estacional, reforzado con calor/sequía y ajustado a suelo y especie":"Seasonal plan, increased during heat/drought and adapted to soil and species",
+    "Contratista según pliego":"Contractor as specified",
+    "Registro de fecha, volumen y árbol; verificación técnica municipal":"Record date, volume and tree; municipal technical verification",
+    "Revisión de tutores, alcorque y estado sanitario":"Check stakes, tree pit and tree health",
+    "Mensual en crecimiento y tras episodios extremos":"Monthly during growth and after extreme events",
+    "Contratista; inspección municipal":"Contractor; municipal inspection",
+    "Incidencias y acciones correctoras":"Issues and corrective actions",
+    "Reposición de marras":"Replacement of failed trees",
+    "Al cierre de cada campaña de supervivencia":"At the end of each survival season",
+    "Contratista durante garantía según pliego":"Contractor during warranty, as specified",
+    "Umbral y plazo definidos en contrato":"Threshold and deadline defined in contract",
+    "Poda de formación / plagas":"Formative pruning / pests",
+    "Según necesidad y criterios técnicos":"As required and according to technical criteria",
+    "Servicio municipal o contratista, según contrato":"Municipal service or contractor, as agreed",
+    "Orden de trabajo y ficha por árbol":"Work order and record for each tree",
+    "Recepción y mantenimiento posterior":"Acceptance and subsequent maintenance",
+    "Recepción tras garantía propuesta de 3 años":"Acceptance after the proposed 3-year warranty",
+    "Técnico municipal responsable del contrato":"Municipal contract manager",
+    "Acta de recepción; después, presupuesto ordinario":"Acceptance certificate; thereafter, regular budget",
+    "Vías de financiación a estudiar":"Potential funding sources to explore",
+    "Opciones para consultar con Secretaría, Intervención y la oficina municipal de fondos europeos. La disponibilidad depende de las convocatorias vigentes y de las bases de cada programa; no se consideran ingresos concedidos.":"Options to discuss with the municipal legal and finance departments and EU funding office. Availability depends on current calls and each programme’s rules; none should be treated as awarded funding.",
+    "Vía":"Source",
+    "Uso potencial":"Potential use",
+    "Precaución / siguiente paso":"Caution / next step",
+    "planes provinciales de cooperación e inversión municipal":"provincial cooperation and municipal investment programmes",
+    "Obra civil, mejora del espacio público y, si las bases lo permiten, infraestructura verde y arbolado.":"Civil works, public-space improvements and, if programme rules allow, green infrastructure and trees.",
+    "Consultar bases del plan y anualidad vigente; no dar por elegible sin confirmación de Diputación.":"Check the current programme rules and year; do not assume eligibility without confirmation from the provincial authority.",
+    "Proyectos de obra de interés general que creen empleo agrario; posible acondicionamiento de espacio público.":"Public-interest works that create agricultural employment; potentially, public-space improvements.",
+    "Elegibilidad de plantación, materiales y riego debe validarse con SEPE/Diputación; no asumir que financia el suministro completo de árboles.":"Confirm planting, materials and watering eligibility with SEPE/the provincial authority; do not assume it covers the full cost of tree supply.",
+    "Proyectos integrales de renaturalización, conectividad verde y adaptación al calor.":"Integrated renaturalisation, green connectivity and heat-adaptation projects.",
+    "Solicitar solo ante convocatoria abierta y proyecto con indicadores, mantenimiento y cofinanciación; NextGenerationEU no es una línea abierta permanente.":"Apply only when a call is open and the project includes indicators, maintenance and co-funding; NextGenerationEU is not a permanently open funding stream.",
+    "Contrapartida, riego y reposición de marras.":"Co-funding, watering and replacement of failed trees.",
+    "Patrocinio sujeto a las reglas municipales; definir titularidad, riego y seguimiento con el Ayuntamiento.":"Sponsorship is subject to municipal rules; agree ownership, watering and monitoring with the Town Council.",
+    "Tres fases por impacto decreciente. Cada fase es un único expediente de plantación municipal.":"Three phases in descending order of impact. Each phase is a single municipal planting project.",
+    "Primera fase — 133 alcorques (21 %)":"Phase 1 — 133 tree pits (21%)",
+    "Segunda fase — 107 alcorques (17 %)":"Phase 2 — 107 tree pits (17%)",
+    "Tercera fase — 90 alcorques (14 %)":"Phase 3 — 90 tree pits (14%)",
+    "Urbanizaciones con calles estrechas y parque lineal. Plantación mayoritaria de Granado y Árbol del amor en calles (Tipo A) y Algarrobo y Encina en el parque Camino Peralta (Tipo C).":"Residential areas with narrow streets and a linear park. Plant mainly pomegranate and Judas trees along streets (Type A), and carob trees and holm oaks in Camino Peralta Park (Type C).",
+    "Casco histórico con aceras estrechas: Granado + Árbol del amor. Rosales, calles anchas residenciales: Almez + Acebuche (c/ Pinsapo, Avda. de los Olmos).":"Historic centre with narrow pavements: pomegranate + Judas tree. Rosales, with wide residential streets: hackberry + wild olive (Pinsapo St, Olmos Ave).",
+    "Avenidas amplias con espacio de enraizamiento: Almez y Algarrobo para sombra de gran porte (Avda. de la Sabiduría, Avda. del Conocimiento, Avda. de las Civilizaciones).":"Wide avenues with room for roots: hackberry and carob for large-scale shade (Sabiduría Ave, Conocimiento Ave, Civilizaciones Ave).",
+    "Las tres fases priorizan 330 alcorques; el número de barrios y las prioridades deben contrastarse con los 635 puntos del inventario GIS, no extrapolarse desde el resumen agregado.":"The three phases prioritise 330 tree pits; neighbourhood counts and priorities should be checked against the 635 points in the GIS inventory, not extrapolated from the aggregate summary.",
+    "Resumen ejecutivo imprimible":"Printable executive summary",
+    "Pulsa para abrir el diálogo de impresión y elige «Guardar como PDF». Se imprime únicamente la ficha ejecutiva de debajo.":"Open the print dialogue and choose “Save as PDF”. Only the executive summary below will be printed.",
+    "Imprimir / guardar resumen como PDF":"Print / save summary as PDF",
+    "Alcorques vacíos — Mairena del Aljarafe":"Empty tree pits — Mairena del Aljarafe",
+    "Inventario de 635 alcorques vacíos en 33 barrios y 146 calles. Seis barrios reúnen aproximadamente el 52 % del total; C/ Ciaurriz registra la mayor concentración.":"Inventory of 635 empty tree pits across 33 neighbourhoods and 146 streets. Six neighbourhoods account for approximately 52% of the total; C/ Ciaurriz has the highest concentration.",
+    "Plantación gradual por fases, selección de especies adaptadas al clima del Aljarafe y verificación previa de cada hueco (servicios enterrados, espacio, estado y accesibilidad).":"Phased planting, species adapted to the Aljarafe climate, and prior checks of every pit (underground utilities, space, condition and access).",
+    "Las coordenadas se pueden descargar como GeoJSON, KML y CSV para incorporarlas a un SIG municipal.":"Coordinates can be downloaded as GeoJSON, KML and CSV for use in a municipal GIS.",
+    "Informe generado por el proyecto Manolit∞ · Datos: inventario municipal de arbolado (15.786 árboles · 635 alcorques vacíos), OpenStreetMap y Catastro.":"Report generated by the Manolit∞ project · Data: municipal tree inventory (15,786 trees · 635 empty tree pits), OpenStreetMap and Cadastre.",
+    "Los puntos del inventario fueron facilitados por Antonio José Sánchez Almendro.":"The inventory points were provided by Antonio José Sánchez Almendro.",
+    "Especies y fotografías procedentes del cuestionario ciudadano.":"Species and photographs from the community survey.",
+    "Abrir el mapa 3D de Mairena del Aljarafe":"Open the Mairena del Aljarafe 3D map",
+    "Documento independiente.":"Standalone document.",
+    "Rutas de sombra.":"Shade routes.",
+    "Quienes somos.":"About us.",
+    "Aviso legal":"Legal notice",
+    "Acera estrecha / peatonal":"Narrow pavement / pedestrian area",
+    "Acera ancha / residencial":"Wide pavement / residential area",
+    "Avenida / plaza / parque":"Avenue / square / park",
+    "Aceras estrechas y mucho paso peatonal: porte pequeño, raíz no invasora y valor ornamental (floración).":"Narrow pavements and heavy pedestrian traffic: small trees with non-invasive roots and ornamental value (flowers).",
+    "Aceras residenciales con espacio suficiente: combinar especies para aportar sombra y evitar concentrar la plantación en una sola especie.":"Residential pavements with enough space: mix species to provide shade and avoid relying on a single species.",
+    "Avenidas, plazas y parques: espacio libre para copa y raíz; especies grandes, longevas y sin riego tras el establecimiento.":"Avenues, squares and parks: open space for crowns and roots; large, long-lived species that need no irrigation once established.",
+    "Copa amplia y densa, excelente sombra en verano. Crece en suelos pobres y secos. Longevo: puede vivir más de 600 años. Sus frutos alimentan pájaros.":"A broad, dense crown provides excellent summer shade. It grows in poor, dry soils and can live for over 600 years. Its fruits feed birds.",
+    "Olivo silvestre autóctono de la Península. Extremadamente resistente a la sequía. Porte elegante y perenne. Base del paisaje mediterráneo del Aljarafe.":"A wild olive native to the Iberian Peninsula and extremely drought-resistant. Its elegant evergreen form is characteristic of the Aljarafe Mediterranean landscape.",
+    "Florece en rosa intenso en primavera, antes de brotar las hojas. Gran valor ornamental. Porte pequeño-medio, ideal para aceras. Resiste bien la sequía estival.":"It produces bright pink flowers in spring before the leaves appear. Highly ornamental and small to medium in size, ideal for pavements. Tolerates summer drought well.",
+    "Almez":"Hackberry",
+    "Acebuche":"Wild olive",
+    "Árbol del amor":"Judas tree",
+    "Algarrobo":"Carob tree",
+    "Encina":"Holm oak",
+    "Granado":"Pomegranate",
+    "Sombra":"Shade",
+    "Sequía":"Drought-tolerant",
+    "Autóctono":"Native",
+    "Autóctona":"Native",
+    "Mediterráneo":"Mediterranean",
+    "Sin riego":"No irrigation",
+    "Ya en Mairena":"Already in Mairena",
+    "Florece":"Flowers",
+    "Tipo ":"Type ",
+    "Sin resultados para":"No results for",
+    "Las Tres Barras":"Las Tres Barras",
+    "Top 6 barrios — el 52 % del problema":"Top 6 neighbourhoods — 52% of the shortfall",
+    "Lectura clave:":"Key takeaway:",
+    "priorizar 3 expedientes de plantación (Tres Barras + Camino Peralta, Casco Antiguo + Rosales, Bulevar + Almendral) resuelve el 52 % de los alcorques vacíos del municipio con la mínima burocracia.":"Prioritising three planting projects (Tres Barras + Camino Peralta, Casco Antiguo + Rosales, Bulevar + Almendral) would address 52% of the municipality’s empty tree pits with minimal administration."
+  };
+const LS_LANG_KEY = 'mairena-lang';
+
+let lang = 'es'; try { lang = localStorage.getItem(LS_LANG_KEY) === 'en' ? 'en' : 'es' } catch (e) { }
+/* expuesto al script principal (tablas dinámicas, presupuesto, mapa) */
+window.LANG = lang;
+window.__mairenaT = T;
+const es2en = (txt) => txt.replace(/Primera fase/g, 'Phase 1').replace(/Segunda fase/g, 'Phase 2').replace(/Tercera fase/g, 'Phase 3').replace(/fases posteriores/g, 'later phases');
+const translateElement = el => {
+  el.normalize();
+  const text = el.textContent.trim(); if (!text) return;
+  /* párrafos compuestos: traducirlos completos aunque lleven <strong>/<b> */
+  if (el.tagName === 'P') {
+    const norm = t => t.replace(/\s+/g, ' ').trim();
+    const k = Object.keys(T).find(key => norm(key) === norm(text));
+    if (k) { el.textContent = T[k]; return; }
+  }
+  if (el.children.length) return;
+  if (T[text]) { el.textContent = T[text]; return; }
+  /* nodos parciales: «Mostrando 30 de 30 calles…», «Fase 1 (133)» */
+  const m = text.match(/^Mostrando\s+(\d+)\s+de\s+30\b/);
+  if (m) { const after = el.lastChild; const tail = T['de 30 calles destacadas (las 30 mayores concentraciones del inventario).']; if (after && after.nodeType === 3 && tail) { after.textContent = ' ' + tail; el.firstChild.textContent = T['Mostrando'] + ' '; } return; }
+  const f = text.match(/^(Primera|Segunda|Tercera)\s+fase(\s*[—–-]\s*.*)$/);
+  if (f) { el.textContent = es2en(f[1] + ' fase') + f[2].replace(/(\d+)\s+alcorques/, '$1 tree pits').replace(/\(\s*(\d+)\s*%\)/, '($1%)'); return; }
+  if (/^Riego y seguimiento hasta verano \d{4}$/.test(text)) { el.textContent = text.replace(/^Riego y seguimiento hasta verano/, 'Watering and monitoring until summer'); return; }
+};
+function translateTree(root) {
+  if (!root) return;
+  /* títulos con numeración: «1 Resumen ejecutivo», «14 Descargar…» */
+  root.querySelectorAll('h2').forEach(h => {
+    const num = h.querySelector('span.num');
+    if (!num) return;
+    const label = (h.textContent || '').replace(num.textContent, '').trim();
+    if (T[label]) { h.textContent = num.textContent + ' ' + T[label]; return; }
+    /* búsqueda tolerante a espacios distintos */
+    const norm = t => t.replace(/\s+/g, ' ').trim();
+    const k = Object.keys(T).find(key => norm(key) === norm(label));
+    if (k) h.textContent = num.textContent + ' ' + T[k];
+  });
+  root.querySelectorAll('h1,h2,h3,p,th,td,button,a,span,strong,b,li,figcaption,label,tfoot th').forEach(el => { if (!el.closest('h2') && !el.closest('#spGrid')) translateElement(el) });
+  /* «Primera fase — 133 alcorques (21 %)» */
+  root.querySelectorAll('h3').forEach(h => { if (/^(Primera|Segunda|Tercera)\s+fase\b/.test(h.textContent.trim())) { const t = h.textContent.trim(); const f = t.match(/^(Primera|Segunda|Tercera)\s+fase(\s*[—–-]\s*.*)$/); if (f) h.textContent = es2en(f[1] + ' fase') + f[2].replace(/(\d+)\s+alcorques/, '$1 tree pits').replace(/\(\s*(\d+)\s*%\)/, '($1%)'); } });
+  root.querySelectorAll('[placeholder]').forEach(el => { if (T[el.placeholder]) el.placeholder = T[el.placeholder] });
+  /* leyenda del mapa: se traduce el nodo de texto final de cada entrada */
+  root.querySelectorAll('.mapa-leyenda>span').forEach(el => {
+    const last = el.lastChild;
+    if (!last || last.nodeType !== 3) return;
+    last.nodeValue = last.nodeValue.replace(/1ª fase/g, 'Phase 1').replace(/2ª fase/g, 'Phase 2').replace(/3ª fase/g, 'Phase 3').replace(/Fases posteriores \(resto de barrios\)/, 'Later phases (other neighbourhoods)');
+  });
+  root.querySelectorAll('#calles p[style]').forEach(el => {
+    if (/Mostrando/.test(el.textContent)) { el.firstChild.nodeValue = (el.firstChild.nodeValue || '').replace(/Mostrando/, 'Showing'); el.lastChild.nodeValue = (el.lastChild.nodeValue || '').replace(/de 30 calles destacadas \(las 30 mayores concentraciones del inventario\)\./, 'of 30 featured streets (the 30 largest concentrations in the inventory).'); }
+  });
+  /* tarjetas de especies (las tablas ya se pintan en el idioma activo desde el script principal) */
+  root.querySelectorAll('#spGrid .sp-card').forEach((card, i) => {
+    const names = ['Hackberry', 'Wild olive', 'Judas tree', 'Carob tree', 'Holm oak', 'Pomegranate'];
+    const tags = [['Shade', 'Drought-tolerant', 'Already in Mairena'], ['Native', 'Drought-tolerant', 'Already in Mairena'], ['Flowers', 'Drought-tolerant', 'Already in Mairena'], ['Shade', 'Native', 'No irrigation'], ['Shade', 'Native', 'No irrigation'], ['Flowers', 'Drought-tolerant', 'Mediterranean']];
+    const descriptions = [T['Copa amplia y densa, excelente sombra en verano. Crece en suelos pobres y secos. Longevo: puede vivir más de 600 años. Sus frutos alimentan pájaros.'], T['Olivo silvestre autóctono de la Península. Extremadamente resistente a la sequía. Porte elegante y perenne. Base del paisaje mediterráneo del Aljarafe.'], T['Florece en rosa intenso en primavera, antes de brotar las hojas. Gran valor ornamental. Porte pequeño-medio, ideal para aceras. Resiste bien la sequía estival.'], T['Árbol perenne con copa densa. No necesita riego una vez establecido. Sus vainas son alimento para fauna y ganado. Especie emblemática del paisaje mediterráneo andaluz.'], T['El árbol más emblemático de Andalucía. Copa densa y perenne, gran sombra. Refugio y alimento para decenas de especies. Crece lentamente pero vive siglos.'], T['Porte pequeño, ideal para aceras estrechas. Flores rojas vistosas en verano y frutos en otoño. Muy adaptado al clima semiárido andaluz. Gran resistencia a la sequía.']];
+    const name = card.querySelector('h3'); if (name) name.textContent = names[i];
+    const desc = card.querySelector('.sp-body>p:not(.sci)'); if (desc) desc.textContent = descriptions[i];
+    card.querySelectorAll('.tag').forEach((tag, j) => { if (j < 3) tag.textContent = tags[i][j]; else tag.textContent = 'Type ' + card.dataset.tipo });
+    const where = card.querySelector('.sp-donde');
+    if (where) { where.innerHTML = where.innerHTML.replace(/La mejor respuesta a la prioridad nº1 del cuestionario: sombra en verano\./, 'The best match for the survey’s top priority: summer shade.').replace(/Cubre 'autóctono' y 'bajo mantenimiento'\./, 'Meets the priorities of native species and low maintenance.').replace(/Ornamental de acera estrecha por antonomasia\./, 'An ideal ornamental tree for narrow pavements.').replace(/La especie más frugal: solo donde hay suelo y espacio de copa\./, 'The most undemanding species: only where soil and crown space are available.').replace(/Máxima biodiversidad y longevidad; solo en espacios estables\./, 'Excellent biodiversity and longevity; only for stable, spacious sites.').replace(/Evita el error clásico de plantar árboles que de adultos rompen el alcorque\./, 'Avoids the common mistake of planting trees that outgrow and damage their pits.'); }
+  });
+}
+function applyEnglish() {
+  if (lang !== 'en') return;
+  document.documentElement.lang = 'en'; document.title = T['Informe de alcorques vacíos — Mairena del Aljarafe · Manolit∞'];
+  /* las tablas y el mapa se pintan con el idioma activo: se repintan en inglés */
+  if (typeof renderBarrios === 'function') { renderBarrios(); renderCalles(); renderMatriz(); if (typeof renderPresuFases === 'function') renderPresuFases(); }
+  translateTree(document.body);
+  const b = document.getElementById('lang-toggle');
+  if (b) { b.textContent = 'ES'; b.setAttribute('aria-label', 'Cambiar idioma / Change language'); b.title = 'Mostrar el informe en español'; }
+}
+function applySpanish() {
+  document.documentElement.lang = 'es';
+  document.title = 'Informe de alcorques vacíos — Mairena del Aljarafe · Manolit∞';
+  const b = document.getElementById('lang-toggle');
+  if (b) { b.textContent = 'EN'; b.setAttribute('aria-label', 'Cambiar idioma / Change language'); b.title = 'Show the report in English'; }
+  if (typeof renderBarrios === 'function') { renderBarrios(); renderCalles(); renderMatriz(); if (typeof renderPresuFases === 'function') renderPresuFases(); }
+}
+/* traducción al vuelo de contenido generado después (popups del mapa, tablas) */
+window.__mairenaTranslate = en => { try { (en ? translateTree : () => { })(document.body) } catch (e) { } };
+window.__mairenaTranslateEN = () => { if (lang === 'en') translateTree(document.body) };
+document.getElementById('lang-toggle').addEventListener('click', () => { const next = lang === 'es' ? 'en' : 'es'; try { localStorage.setItem(LS_LANG_KEY, next) } catch (e) { } lang = next; if (next === 'en') applyEnglish(); else location.reload() });
+if (lang === 'en') applyEnglish(); else applySpanish();
+})();</script>
 </body>
 </html>
